@@ -9,6 +9,7 @@ import {
   fmtDay,
 } from '@/lib/schedule'
 import RosterGrid from './RosterGrid'
+import GuidedTour from './GuidedTour'
 import { isFlagEnabled } from '@/lib/flags'
 
 function parseWeek(param: string | undefined): Date {
@@ -44,6 +45,9 @@ export default async function RosterPage({
 
   const prevWeek = toISODate(addDays(weekStart, -7))
   const nextWeek = toISODate(addDays(weekStart, 7))
+  const dndEnabled = isFlagEnabled('dnd-scheduling')
+  const crudEnabled = isFlagEnabled('shift-crud')
+  const tourEnabled = isFlagEnabled('guided-tour')
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -55,7 +59,8 @@ export default async function RosterPage({
             {fmtDay(new Date(days[6] + 'T00:00:00Z'))}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm" data-tour="week-nav">
+          <GuidedTour enabled={tourEnabled} dndEnabled={dndEnabled} crudEnabled={crudEnabled} />
           <Link
             href={`/roster?week=${prevWeek}`}
             className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
@@ -86,15 +91,15 @@ export default async function RosterPage({
         initialShifts={shifts}
         days={days}
         preview={preview}
-        dndEnabled={isFlagEnabled('dnd-scheduling')}
-        crudEnabled={isFlagEnabled('shift-crud')}
+        dndEnabled={dndEnabled}
+        crudEnabled={crudEnabled}
       />
 
       <p className="mt-4 text-sm text-zinc-500">
-        {isFlagEnabled('dnd-scheduling')
+        {dndEnabled
           ? 'Drag a shift to move it to another day or employee'
           : 'Drag-and-drop is currently disabled'}
-        {isFlagEnabled('shift-crud')
+        {crudEnabled
           ? ' • click a shift to edit or delete it • click an empty cell to add one.'
           : '.'}
       </p>
