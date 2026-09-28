@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "node tests/smoke/run.js",
+    "test:load": "node tests/load/run.js",
+    "test:nightly": "npm run test:e2e && npm run test:load"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
