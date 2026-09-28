@@ -46,6 +46,24 @@ day's doc; old docs are never rewritten.
 | `guided-tour` | First-run guided tour for new users |
 | `maintenance-banner` | Nightly maintenance banner during the test window |
 
+## Nightly testing
+
+`tests/smoke/run.js` — browserless smoke checks (root redirect, roster demo
+data, login form, dashboard, maintenance banner inside the 11pm–1am PT
+window). `tests/load/run.js` — light load probe (10 concurrent workers, 30s,
+p99 budget 2000ms, zero errors). Target defaults to production; override with
+`TEST_BASE_URL`.
+
+```bash
+npm run test:e2e    # smoke checks
+npm run test:load    # load probe
+npm run test:nightly # both, as the nightly cron runs them
+```
+
+A scheduled job runs `npm run test:nightly` daily at ~11:15pm PT and reports
+pass/fail. The maintenance banner (`maintenance-banner` flag,
+`MAINTENANCE_WINDOW`) shows in the app during the 11pm–1am PT window.
+
 ## Deploy
 
 Import the GitHub repo in Vercel. Set the same env vars from `.env.example`
