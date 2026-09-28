@@ -153,7 +153,7 @@ export default function RosterGrid({
 
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border bg-white">
+      <div className="overflow-x-auto rounded-xl border bg-white" data-tour="grid">
         <div
           className="grid min-w-[900px]"
           style={{ gridTemplateColumns: '160px repeat(7, minmax(0, 1fr))' }}
@@ -191,6 +191,7 @@ export default function RosterGrid({
                     onDrop={(e) => dndEnabled && handleDrop(e, emp.id, iso)}
                     className={`min-h-20 border-b border-l p-1.5 ${crudEnabled ? 'cursor-pointer hover:bg-zinc-50' : ''}`}
                     title={crudEnabled ? 'Click to add a shift' : undefined}
+                    data-tour="cell"
                   >
                     {dayShifts.map((sh) => (
                       <div
@@ -213,6 +214,7 @@ export default function RosterGrid({
                               ? 'Click to edit'
                               : undefined
                         }
+                        data-tour="shift"
                       >
                         {fmtTime(sh.starts_at)}–{fmtTime(sh.ends_at)}
                       </div>
