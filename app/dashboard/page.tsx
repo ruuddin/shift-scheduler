@@ -31,12 +31,20 @@ export default async function DashboardPage() {
           <p className="mb-4 text-sm text-zinc-500">
             The roster builder lands on Day 4–6. For now you can invite your team.
           </p>
-          <Link
-            href="/invite"
-            className="inline-block rounded-md bg-zinc-900 px-4 py-2 text-sm text-white"
-          >
-            Invite employees
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/roster"
+              className="inline-block rounded-md bg-zinc-900 px-4 py-2 text-sm text-white"
+            >
+              Open roster
+            </Link>
+            <Link
+              href="/invite"
+              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              Invite employees
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="rounded-xl border p-6">
