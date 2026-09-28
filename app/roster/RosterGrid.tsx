@@ -15,6 +15,8 @@ type Props = {
   initialShifts: Shift[]
   days: string[] // ISO dates, Mon → Sun
   preview: boolean
+  dndEnabled: boolean
+  crudEnabled: boolean
 }
 
 type ModalState =
@@ -22,7 +24,14 @@ type ModalState =
   | { kind: 'edit'; shift: Shift }
   | null
 
-export default function RosterGrid({ employees, initialShifts, days, preview }: Props) {
+export default function RosterGrid({
+  employees,
+  initialShifts,
+  days,
+  preview,
+  dndEnabled,
+  crudEnabled,
+}: Props) {
   const [shifts, setShifts] = useState<Shift[]>(initialShifts)
   const [modal, setModal] = useState<ModalState>(null)
   const [start, setStart] = useState('09:00')
@@ -177,26 +186,33 @@ export default function RosterGrid({ employees, initialShifts, days, preview }: 
                 return (
                   <div
                     key={emp.id + iso}
-                    onClick={() => openCreate(emp.id, iso)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => handleDrop(e, emp.id, iso)}
-                    className="min-h-20 cursor-pointer border-b border-l p-1.5 hover:bg-zinc-50"
-                    title="Click to add a shift"
+                    onClick={() => crudEnabled && openCreate(emp.id, iso)}
+                    onDragOver={(e) => dndEnabled && e.preventDefault()}
+                    onDrop={(e) => dndEnabled && handleDrop(e, emp.id, iso)}
+                    className={`min-h-20 border-b border-l p-1.5 ${crudEnabled ? 'cursor-pointer hover:bg-zinc-50' : ''}`}
+                    title={crudEnabled ? 'Click to add a shift' : undefined}
                   >
                     {dayShifts.map((sh) => (
                       <div
                         key={sh.id}
-                        draggable
+                        draggable={dndEnabled}
                         onDragStart={(e) => {
+                          if (!dndEnabled) return
                           e.dataTransfer.setData('text/plain', sh.id)
                           e.dataTransfer.effectAllowed = 'move'
                         }}
                         onClick={(e) => {
                           e.stopPropagation()
-                          openEdit(sh)
+                          if (crudEnabled) openEdit(sh)
                         }}
-                        className={`mb-1 cursor-grab rounded border px-2 py-1 text-xs font-medium active:cursor-grabbing ${colorFor(ei)}`}
-                        title="Drag to move • click to edit"
+                        className={`mb-1 rounded border px-2 py-1 text-xs font-medium ${dndEnabled ? 'cursor-grab active:cursor-grabbing' : ''} ${colorFor(ei)}`}
+                        title={
+                          dndEnabled && crudEnabled
+                            ? 'Drag to move • click to edit'
+                            : crudEnabled
+                              ? 'Click to edit'
+                              : undefined
+                        }
                       >
                         {fmtTime(sh.starts_at)}–{fmtTime(sh.ends_at)}
                       </div>

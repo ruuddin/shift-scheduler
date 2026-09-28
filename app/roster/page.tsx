@@ -9,6 +9,7 @@ import {
   fmtDay,
 } from '@/lib/schedule'
 import RosterGrid from './RosterGrid'
+import { isFlagEnabled } from '@/lib/flags'
 
 function parseWeek(param: string | undefined): Date {
   if (param && /^\d{4}-\d{2}-\d{2}$/.test(param)) {
@@ -80,11 +81,22 @@ export default async function RosterPage({
         </p>
       )}
 
-      <RosterGrid employees={staff} initialShifts={shifts} days={days} preview={preview} />
+      <RosterGrid
+        employees={staff}
+        initialShifts={shifts}
+        days={days}
+        preview={preview}
+        dndEnabled={isFlagEnabled('dnd-scheduling')}
+        crudEnabled={isFlagEnabled('shift-crud')}
+      />
 
       <p className="mt-4 text-sm text-zinc-500">
-        Drag a shift to move it to another day or employee • click a shift to edit or
-        delete it • click an empty cell to add one.
+        {isFlagEnabled('dnd-scheduling')
+          ? 'Drag a shift to move it to another day or employee'
+          : 'Drag-and-drop is currently disabled'}
+        {isFlagEnabled('shift-crud')
+          ? ' • click a shift to edit or delete it • click an empty cell to add one.'
+          : '.'}
       </p>
     </main>
   )

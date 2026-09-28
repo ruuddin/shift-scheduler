@@ -2,6 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { isFlagEnabled } from '@/lib/flags'
+
+function requireCrudEnabled() {
+  if (!isFlagEnabled('shift-crud')) {
+    throw new Error('Shift editing is currently disabled')
+  }
+}
 
 async function requireManager() {
   const supabase = await createClient()
@@ -19,6 +26,7 @@ export async function createShiftAction(input: {
   starts_at: string
   ends_at: string
 }) {
+  requireCrudEnabled()
   const { supabase, teamId } = await requireManager()
   const { data, error } = await supabase
     .from('shifts')
@@ -34,6 +42,7 @@ export async function updateShiftAction(
   id: string,
   input: { employee_id: string; starts_at: string; ends_at: string }
 ) {
+  requireCrudEnabled()
   const { supabase } = await requireManager()
   const { data, error } = await supabase
     .from('shifts')
@@ -47,6 +56,7 @@ export async function updateShiftAction(
 }
 
 export async function deleteShiftAction(id: string) {
+  requireCrudEnabled()
   const { supabase } = await requireManager()
   const { error } = await supabase.from('shifts').delete().eq('id', id)
   if (error) throw new Error(error.message)

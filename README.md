@@ -33,6 +33,19 @@ Daily change history lives in the "Shift Scheduler - Build Plan" Google Drive
 folder — one doc per day (Day 1 … Day 14). Every change is logged in that
 day's doc; old docs are never rewritten.
 
+## Feature flags
+
+`lib/flags.ts` — server-side kill switches, all default ON. Set `FEATURE_FLAGS`
+(comma-separated) to override: `"all"`, `"none"`, or individual flags, with
+`no-<flag>` to disable one default-on flag.
+
+| Flag | Gates |
+| ---- | ----- |
+| `dnd-scheduling` | Drag-and-drop moving of shifts on the roster |
+| `shift-crud` | Create / edit / delete shifts (grid UI + server actions) |
+| `guided-tour` | First-run guided tour for new users |
+| `maintenance-banner` | Nightly maintenance banner during the test window |
+
 ## Deploy
 
 Import the GitHub repo in Vercel. Set the same env vars from `.env.example`
