@@ -23,7 +23,8 @@ npm run dev                   # http://localhost:3000
 ## Project layout
 
 - `app/` — routes (manager roster, employee "my shifts", requests)
-- `supabase/schema.sql` — database tables (applied Day 3)
+- `supabase/` — database files, applied in order in the Supabase SQL editor:
+  `schema.sql` → `rls.sql` → `seed.sql` (demo team + one published week)
 - `.env.example` — required env keys per integration
 
 ## Build log
