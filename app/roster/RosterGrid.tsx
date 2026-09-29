@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import {
   Employee,
   Shift,
@@ -48,11 +48,18 @@ export default function RosterGrid({
   const [start, setStart] = useState('09:00')
   const [end, setEnd] = useState('17:00')
   const [saving, setSaving] = useState(false)
-  // Mobile day view: default to today when it's in this week, else Monday.
-  const [selectedDay, setSelectedDay] = useState(() => {
+  // Mobile day view: default to the viewer's local today when it's in this
+  // week, else Monday. Starts at days[0] because the server prerender runs
+  // in UTC (a day ahead/behind the viewer); corrected after mount.
+  const [selectedDay, setSelectedDay] = useState(days[0])
+  useEffect(() => {
     const today = localISODate(new Date())
-    return days.includes(today) ? today : days[0]
-  })
+    const correct = days.includes(today) ? today : days[0]
+    // Sync with the client's local date (external system): the server
+    // prerender runs in UTC, which can be a day off from the viewer.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedDay(correct)
+  }, [days])
 
   const empName = (id: string) => employees.find((e) => e.id === id)?.name ?? ''
 
@@ -242,7 +249,7 @@ export default function RosterGrid({
 
       {/* Mobile: day picker + employee cards */}
       <div className="md:hidden" data-tour-m="grid">
-        <div className="-mx-4 overflow-x-auto px-4 pb-1" role="tablist" aria-label="Pick a day">
+        <div className="overflow-x-auto pb-1" role="tablist" aria-label="Pick a day">
           <div className="flex gap-2">
             {days.map((iso) => {
               const { dow, md } = dayLabel(iso)

@@ -50,7 +50,7 @@ export default async function RosterPage({
   const tourEnabled = isFlagEnabled('guided-tour')
 
   return (
-    <main className="mx-auto max-w-6xl overflow-x-clip px-4 py-6 md:py-8">
+    <main className="mx-auto max-w-6xl overflow-x-hidden px-4 py-6 md:py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Roster</h1>
@@ -95,7 +95,12 @@ export default async function RosterPage({
         crudEnabled={crudEnabled}
       />
 
-      <p className="mt-4 break-words text-sm text-zinc-500">
+      <p className="mt-4 break-words text-sm text-zinc-500 md:hidden">
+        {crudEnabled
+          ? 'Tap a shift to edit or delete it • tap + Add on a teammate to add one.'
+          : 'Shifts are read-only.'}
+      </p>
+      <p className="mt-4 hidden break-words text-sm text-zinc-500 md:block">
         {dndEnabled
           ? 'Drag a shift to move it to another day or employee'
           : 'Drag-and-drop is currently disabled'}
