@@ -25,7 +25,11 @@ function assert(cond, msg) {
 }
 
 async function get(path) {
-  const res = await fetch(`${BASE}${path}`)
+  // NOTE: `Connection: close` — the egress proxy kills keep-alive pooled
+  // connections, making every second fetch() fail with "fetch failed".
+  const res = await fetch(`${BASE}${path}`, {
+    headers: { Connection: 'close' },
+  })
   const html = await res.text()
   return { res, html }
 }
