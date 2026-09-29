@@ -25,6 +25,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/*
+ * Never allow page-level horizontal scrolling. overflow-x: clip is the modern
+ * choice but isn't honored by every webview (notably the in-app browser some
+ * users open preview links in); overflow-x: hidden is universally supported
+ * and guarantees nothing can push the page wider than the viewport.
+ * Inner scrollers (day pills, desktop grid) keep their own overflow-x: auto.
+ */
+html,
+body {
+  overflow-x: hidden;
+}
+
 /* Keep the guided-tour popover inside small viewports */
 .driver-popover {
   max-width: calc(100vw - 32px);
