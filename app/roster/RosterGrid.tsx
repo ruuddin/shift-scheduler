@@ -54,7 +54,11 @@ export default function RosterGrid({
   const [selectedDay, setSelectedDay] = useState(days[0])
   useEffect(() => {
     const today = localISODate(new Date())
-    setSelectedDay(days.includes(today) ? today : days[0])
+    const correct = days.includes(today) ? today : days[0]
+    // Sync with the client's local date (external system): the server
+    // prerender runs in UTC, which can be a day off from the viewer.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedDay(correct)
   }, [days])
 
   const empName = (id: string) => employees.find((e) => e.id === id)?.name ?? ''
