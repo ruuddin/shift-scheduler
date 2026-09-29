@@ -24,6 +24,17 @@ type ModalState =
   | { kind: 'edit'; shift: Shift }
   | null
 
+function localISODate(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
+
+function dayLabel(iso: string): { dow: string; md: string } {
+  const parts = fmtDay(new Date(iso + 'T00:00:00Z')).split(' ')
+  return { dow: parts[0].replace(',', ''), md: parts.slice(1).join(' ') }
+}
+
 export default function RosterGrid({
   employees,
   initialShifts,
@@ -37,6 +48,11 @@ export default function RosterGrid({
   const [start, setStart] = useState('09:00')
   const [end, setEnd] = useState('17:00')
   const [saving, setSaving] = useState(false)
+  // Mobile day view: default to today when it's in this week, else Monday.
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const today = localISODate(new Date())
+    return days.includes(today) ? today : days[0]
+  })
 
   const empName = (id: string) => employees.find((e) => e.id === id)?.name ?? ''
 
@@ -153,22 +169,19 @@ export default function RosterGrid({
 
   return (
     <>
-      <div className="overflow-x-auto rounded-xl border bg-white" data-tour="grid">
+      {/* Desktop: full week grid */}
+      <div className="hidden overflow-x-auto rounded-xl border bg-white md:block" data-tour="grid">
         <div
           className="grid min-w-[900px]"
           style={{ gridTemplateColumns: '160px repeat(7, minmax(0, 1fr))' }}
         >
           <div className="border-b bg-zinc-50 p-3" />
           {days.map((iso) => {
-            const d = new Date(iso + 'T00:00:00Z')
+            const { dow, md } = dayLabel(iso)
             return (
               <div key={iso} className="border-b border-l bg-zinc-50 p-2 text-center">
-                <div className="text-xs font-semibold uppercase text-zinc-500">
-                  {fmtDay(d).split(' ')[0]}
-                </div>
-                <div className="text-sm font-medium">
-                  {fmtDay(d).split(' ').slice(1).join(' ')}
-                </div>
+                <div className="text-xs font-semibold uppercase text-zinc-500">{dow}</div>
+                <div className="text-sm font-medium">{md}</div>
               </div>
             )
           })}
@@ -227,13 +240,93 @@ export default function RosterGrid({
         </div>
       </div>
 
+      {/* Mobile: day picker + employee cards */}
+      <div className="md:hidden" data-tour-m="grid">
+        <div className="-mx-4 overflow-x-auto px-4 pb-1" role="tablist" aria-label="Pick a day">
+          <div className="flex gap-2">
+            {days.map((iso) => {
+              const { dow, md } = dayLabel(iso)
+              const active = iso === selectedDay
+              return (
+                <button
+                  key={iso}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setSelectedDay(iso)}
+                  className={`flex min-w-16 shrink-0 flex-col items-center rounded-xl border px-3 py-2 ${
+                    active
+                      ? 'border-zinc-900 bg-zinc-900 text-white'
+                      : 'border-zinc-200 bg-white'
+                  }`}
+                >
+                  <span className={`text-[11px] font-semibold uppercase ${active ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                    {dow}
+                  </span>
+                  <span className="text-sm font-medium">{md}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="mt-3 space-y-3">
+          {employees.map((emp, ei) => {
+            const dayShifts = shifts.filter(
+              (sh) => sh.employee_id === emp.id && sh.starts_at.slice(0, 10) === selectedDay
+            )
+            return (
+              <div key={emp.id} className="rounded-xl border bg-white p-3" data-tour-m="cell">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{emp.name}</div>
+                    <div className="truncate text-xs text-zinc-500">{emp.email}</div>
+                  </div>
+                  {crudEnabled && (
+                    <button
+                      onClick={() => openCreate(emp.id, selectedDay)}
+                      aria-label={`Add shift for ${emp.name} on ${dayLabel(selectedDay).dow}`}
+                      className="shrink-0 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-zinc-50"
+                    >
+                      + Add
+                    </button>
+                  )}
+                </div>
+                {dayShifts.length === 0 ? (
+                  <p className="text-sm text-zinc-400">
+                    No shifts{crudEnabled ? ' — tap + Add' : ''}.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {dayShifts.map((sh) => (
+                      <button
+                        key={sh.id}
+                        onClick={() => crudEnabled && openEdit(sh)}
+                        data-tour-m="shift"
+                        className={`block w-full rounded-lg border px-3 py-2.5 text-left text-sm font-medium ${colorFor(ei)} ${crudEnabled ? '' : 'cursor-default'}`}
+                      >
+                        {fmtTime(sh.starts_at)} – {fmtTime(sh.ends_at)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {employees.length === 0 && (
+            <p className="rounded-xl border bg-white p-4 text-sm text-zinc-500">
+              No team members yet.
+            </p>
+          )}
+        </div>
+      </div>
+
       {modal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={() => setModal(null)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="mb-1 text-lg font-bold">

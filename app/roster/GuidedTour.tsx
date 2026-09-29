@@ -13,8 +13,11 @@ type Props = {
 
 const SEEN_KEY = 'shift-scheduler.tour-seen.v1'
 
+type Step = { element?: string; popover: { title: string; description: string } }
+
 // First-run guided tour of the roster. Flag-gated; auto-starts once per
 // browser (localStorage), replayable via the "Take tour" button.
+// Picks mobile or desktop anchors based on viewport width.
 export default function GuidedTour({ enabled, dndEnabled, crudEnabled }: Props) {
   const driverRef = useRef<Driver | null>(null)
 
@@ -23,7 +26,17 @@ export default function GuidedTour({ enabled, dndEnabled, crudEnabled }: Props) 
       driverRef.current.destroy()
       driverRef.current = null
     }
-    const steps: { element?: string; popover: { title: string; description: string } }[] = [
+    const mobile =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 767px)').matches
+    // Mobile layout uses data-tour-m="…" anchors; desktop uses data-tour="…".
+    // The week nav is the same element on both.
+    const sel = (name: string) =>
+      `[data-tour${mobile ? '-m' : ''}="${name}"]`
+    const navSel = '[data-tour="week-nav"]'
+    const has = (s: string) => !!document.querySelector(s)
+
+    const steps: Step[] = [
       {
         popover: {
           title: 'Welcome to Shift Scheduler',
@@ -31,43 +44,53 @@ export default function GuidedTour({ enabled, dndEnabled, crudEnabled }: Props) 
             'This quick tour shows you around the weekly roster. You can replay it anytime with the "Take tour" button.',
         },
       },
-      {
-        element: '[data-tour="week-nav"]',
+    ]
+    if (has(navSel)) {
+      steps.push({
+        element: navSel,
         popover: {
           title: 'Move between weeks',
           description:
             'Jump to the previous or next week, or snap back to the current week.',
         },
-      },
-      {
-        element: '[data-tour="grid"]',
+      })
+    }
+    const gridSel = sel('grid')
+    if (has(gridSel)) {
+      steps.push({
+        element: gridSel,
         popover: {
           title: 'Your weekly roster',
-          description:
-            'Every row is a team member, every column a day. Published shifts show up here for the whole team.',
+          description: mobile
+            ? 'Pick a day to see who works it. Every teammate gets a card with their shifts for that day.'
+            : 'Every row is a team member, every column a day. Published shifts show up here for the whole team.',
         },
-      },
-    ]
-    if (dndEnabled || crudEnabled) {
-      steps.push({
-        element: '[data-tour="shift"]',
-        popover: {
-          title: 'Shifts',
-          description: [
+      })
+    }
+    const shiftSel = sel('shift')
+    if ((dndEnabled || crudEnabled) && has(shiftSel)) {
+      const desc = mobile
+        ? 'Tap a shift to edit or delete it.'
+        : [
             dndEnabled ? 'Drag a shift to move it to another day or teammate.' : '',
             crudEnabled ? 'Click a shift to edit or delete it.' : '',
           ]
             .filter(Boolean)
-            .join(' '),
-        },
+            .join(' ')
+      steps.push({
+        element: shiftSel,
+        popover: { title: 'Shifts', description: desc },
       })
     }
-    if (crudEnabled) {
+    const cellSel = sel('cell')
+    if (crudEnabled && has(cellSel)) {
       steps.push({
-        element: '[data-tour="cell"]',
+        element: cellSel,
         popover: {
           title: 'Add a shift',
-          description: 'Click any empty cell to add a shift for that person and day.',
+          description: mobile
+            ? 'Tap + Add on any teammate to add a shift for the selected day.'
+            : 'Click any empty cell to add a shift for that person and day.',
         },
       })
     }

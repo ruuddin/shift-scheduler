@@ -55,6 +55,13 @@ async function main() {
     assert(html.includes('Cara Cashier'), 'missing demo employee Cara Cashier')
   })
 
+  await check('roster renders mobile day-view markup', async () => {
+    const { html } = await get('/roster?week=2026-10-05')
+    assert(html.includes('data-tour-m="grid"'), 'missing mobile day-view container')
+    assert(html.includes('Pick a day'), 'missing mobile day picker')
+    assert(html.includes('+ Add'), 'missing mobile add-shift button')
+  })
+
   await check('login page loads', async () => {
     const { res, html } = await get('/login')
     assert(res.status === 200, `status ${res.status}`)
