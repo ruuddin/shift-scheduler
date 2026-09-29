@@ -18,7 +18,9 @@ async function worker(deadline, stats) {
   while (Date.now() < deadline) {
     const start = Date.now()
     try {
-      const res = await fetch(URL)
+      // NOTE: `Connection: close` — the egress proxy kills keep-alive pooled
+      // connections, making alternating fetches fail with "fetch failed".
+      const res = await fetch(URL, { headers: { Connection: 'close' } })
       await res.text()
       const ms = Date.now() - start
       stats.latencies.push(ms)

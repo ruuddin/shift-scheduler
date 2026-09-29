@@ -248,9 +248,9 @@ export default function RosterGrid({
       </div>
 
       {/* Mobile: day picker + employee cards */}
-      <div className="md:hidden" data-tour-m="grid">
-        <div className="overflow-x-auto pb-1" role="tablist" aria-label="Pick a day">
-          <div className="flex gap-2">
+      <div className="min-w-0 md:hidden" data-tour-m="grid">
+        <div className="w-full overflow-x-auto pb-1" role="tablist" aria-label="Pick a day">
+          <div className="flex w-max gap-2">
             {days.map((iso) => {
               const { dow, md } = dayLabel(iso)
               const active = iso === selectedDay
