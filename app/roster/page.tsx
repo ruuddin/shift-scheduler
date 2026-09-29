@@ -50,7 +50,7 @@ export default async function RosterPage({
   const tourEnabled = isFlagEnabled('guided-tour')
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <main className="mx-auto max-w-6xl overflow-x-clip px-4 py-6 md:py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Roster</h1>
@@ -59,7 +59,7 @@ export default async function RosterPage({
             {fmtDay(new Date(days[6] + 'T00:00:00Z'))}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm" data-tour="week-nav">
+        <div className="flex flex-wrap items-center gap-2 text-sm" data-tour="week-nav">
           <GuidedTour enabled={tourEnabled} dndEnabled={dndEnabled} crudEnabled={crudEnabled} />
           <Link
             href={`/roster?week=${prevWeek}`}
@@ -80,7 +80,7 @@ export default async function RosterPage({
       </div>
 
       {preview && (
-        <p className="mb-4 rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-800">
+        <p className="mb-4 break-words rounded-md bg-amber-50 px-4 py-2 text-sm text-amber-800">
           Preview mode — schedule edits are kept in this session only. Add Supabase
           keys to <code>.env.local</code> to persist them.
         </p>
@@ -95,7 +95,7 @@ export default async function RosterPage({
         crudEnabled={crudEnabled}
       />
 
-      <p className="mt-4 text-sm text-zinc-500">
+      <p className="mt-4 break-words text-sm text-zinc-500">
         {dndEnabled
           ? 'Drag a shift to move it to another day or employee'
           : 'Drag-and-drop is currently disabled'}
