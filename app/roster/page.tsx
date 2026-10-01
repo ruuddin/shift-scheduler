@@ -62,6 +62,12 @@ export default async function RosterPage({
         <div className="flex flex-wrap items-center gap-2 text-sm" data-tour="week-nav">
           <GuidedTour enabled={tourEnabled} dndEnabled={dndEnabled} crudEnabled={crudEnabled} />
           <Link
+            href="/guide"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Guides
+          </Link>
+          <Link
             href={`/roster?week=${prevWeek}`}
             className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
           >

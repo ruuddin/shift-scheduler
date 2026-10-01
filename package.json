@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test:e2e": "node tests/smoke/run.js",
     "test:load": "node tests/load/run.js",
-    "test:nightly": "npm run test:e2e && npm run test:load"
+    "test:docs": "node tests/docs/run.js",
+    "test:nightly": "npm run test:e2e && npm run test:load && npm run test:docs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
