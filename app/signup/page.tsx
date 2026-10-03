@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { logEventAction } from '@/app/event-actions'
 
 // First user of a team signs up here and becomes the manager.
 // Tip: in Supabase Auth settings, turn off "Confirm email" for the pilot
@@ -51,6 +52,13 @@ export default function SignupPage() {
       setLoading(false)
       return
     }
+    await logEventAction({
+      eventType: 'auth.signup',
+      entityType: 'team',
+      actorEmail: email,
+      actorRole: 'manager',
+      teamName,
+    })
     router.push('/dashboard')
     router.refresh()
   }

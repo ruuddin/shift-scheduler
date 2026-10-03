@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { logEventAction } from '@/app/event-actions'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,6 +24,7 @@ export default function LoginPage() {
       setLoading(false)
       return
     }
+    await logEventAction({ eventType: 'auth.login', actorEmail: email })
     router.push('/dashboard')
     router.refresh()
   }

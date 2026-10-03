@@ -29,6 +29,12 @@ export default async function DashboardPage() {
               Open roster
             </Link>
             <Link
+              href="/admin"
+              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              Admin
+            </Link>
+            <Link
               href="/guide"
               className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
             >
@@ -79,6 +85,12 @@ export default async function DashboardPage() {
               className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
             >
               Invite employees
+            </Link>
+            <Link
+              href="/admin"
+              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              Admin
             </Link>
             <Link
               href="/guide"
