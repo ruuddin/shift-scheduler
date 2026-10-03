@@ -58,8 +58,21 @@ export async function logEventAction(input: LogInput): Promise<void> {
       data: { user },
     } = await supabase.auth.getUser()
 
+    // Resolve team_id from the employee row first, then auth metadata.
+    let teamId: string | null =
+      (user?.user_metadata?.team_id as string | undefined) ?? null
+    if (!teamId && user) {
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('team_id')
+        .eq('user_id', user.id)
+        .limit(1)
+        .single()
+      teamId = (employee?.team_id as string | undefined) ?? null
+    }
+
     const { error } = await supabase.from('events').insert({
-      team_id: (user?.user_metadata?.team_id as string | undefined) ?? null,
+      team_id: teamId,
       actor_id: user?.id ?? null,
       actor_email: user?.email ?? input.actorEmail ?? null,
       actor_role:

@@ -14,9 +14,16 @@ export default function InviteForm() {
     e.preventDefault()
     setStatus('saving')
     const supabase = createClient()
+    const { getMyTeam } = await import('@/app/team-actions')
+    const team = await getMyTeam()
+    if (!team) {
+      setStatus('error')
+      setMessage('Could not find your team — try signing in again.')
+      return
+    }
     const { error } = await supabase
       .from('employees')
-      .insert({ name, email, role: 'employee' })
+      .insert({ team_id: team.id, name, email, role: 'employee' })
     if (error) {
       setStatus('error')
       setMessage(error.message)

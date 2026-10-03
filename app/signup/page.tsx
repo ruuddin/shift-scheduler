@@ -35,16 +35,29 @@ export default function SignupPage() {
       return
     }
     // If this email was invited as an employee, link the auth user to the row.
-    // (Works once Day 3's RLS policies allow it; safe to attempt before then.)
+    // Otherwise this is a new team — create the team + manager employee row.
+    let linkedToInvite = false
     if (data.user) {
       try {
-        await supabase
+        const { data: linked } = await supabase
           .from('employees')
           .update({ user_id: data.user.id })
           .eq('email', email)
           .is('user_id', null)
+          .select('id')
+        linkedToInvite = !!linked && linked.length > 0
       } catch {
-        /* employees table / RLS lands Day 3 */
+        /* employees table / RLS not ready yet */
+      }
+    }
+    if (!linkedToInvite && data.session) {
+      try {
+        const { createTeamForNewUser } = await import('@/app/team-actions')
+        await createTeamForNewUser(teamName, name)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Could not create your team.')
+        setLoading(false)
+        return
       }
     }
     if (!data.session) {
