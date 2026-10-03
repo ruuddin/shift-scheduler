@@ -1,7 +1,8 @@
 // Schedule data layer.
-// Day 4: serves mock data (mirrors supabase/seed.sql) so the UI builds without
-// live keys. Swap getWeekSchedule's body for a Supabase query once .env.local
-// is filled in — the return shape stays the same.
+// Types, formatters, and mock data (preview mode) live here — this file is
+// imported by client components, so it must stay free of server-only imports.
+// Live Supabase queries live in lib/schedule-server.ts and are called
+// directly by Server Components.
 
 export type Employee = { id: string; name: string; email: string; role: string }
 export type Shift = {
@@ -48,14 +49,9 @@ export const mockShifts: Shift[] = [
   s('2026-10-11', '08:00', '16:00', CARA, 13),
 ]
 
-export async function getWeekSchedule(
+export function getMockWeekSchedule(
   weekStart: Date
-): Promise<{ employees: Employee[]; shifts: Shift[] }> {
-  // TODO(Day 4 wiring): replace with live Supabase query, e.g.
-  //   const supabase = await createClient()
-  //   const { data: shifts } = await supabase.from('shifts')
-  //     .select('*').gte('starts_at', weekStart.toISOString())
-  //     .lt('starts_at', addDays(weekStart, 7).toISOString())
+): { employees: Employee[]; shifts: Shift[] } {
   const end = addDays(weekStart, 7)
   const shifts = mockShifts.filter((sh) => {
     const t = new Date(sh.starts_at).getTime()
