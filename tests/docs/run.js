@@ -17,6 +17,7 @@ const GUIDES = [
   { path: '/guide/drag-and-drop', title: 'Drag-and-drop scheduling' },
   { path: '/guide/tour', title: 'Guided tour' },
   { path: '/guide/admin', title: 'Admin &amp; event history' },
+  { path: '/guide/teams', title: 'Working with multiple teams' },
 ]
 
 let failures = 0

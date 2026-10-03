@@ -12,7 +12,11 @@ export default async function InvitePage() {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
-  if (user.user_metadata?.role !== 'manager') redirect('/dashboard')
+  const { getActiveTeam, getMyTeams } = await import('@/app/team-actions')
+  const activeTeam = await getActiveTeam()
+  const teams = await getMyTeams()
+  const role = teams.find((t) => t.id === activeTeam?.id)?.role
+  if (role !== 'manager') redirect('/dashboard')
 
   return (
     <main className="mx-auto max-w-md px-4 py-10">

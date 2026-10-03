@@ -16,10 +16,16 @@ async function requireManager() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user || user.user_metadata?.role !== 'manager') {
+  if (!user) throw new Error('Not authorized')
+  const { getActiveTeam, getMyTeams } = await import('@/app/team-actions')
+  const activeTeam = await getActiveTeam()
+  if (!activeTeam) throw new Error('No team selected')
+  const teams = await getMyTeams()
+  const membership = teams.find((t) => t.id === activeTeam.id)
+  if (!membership || membership.role !== 'manager') {
     throw new Error('Not authorized')
   }
-  return { supabase, teamId: user.user_metadata?.team_id as string | undefined }
+  return { supabase, teamId: activeTeam.id }
 }
 
 async function employeeName(
