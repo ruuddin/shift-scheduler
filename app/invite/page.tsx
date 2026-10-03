@@ -4,6 +4,9 @@ import InviteForm from './invite-form'
 
 // Manager-only. Activates once the employees table exists (schema applied Day 3).
 export default async function InvitePage() {
+  const preview = !process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (preview) redirect('/dashboard')
+
   const supabase = await createClient()
   const {
     data: { user },
