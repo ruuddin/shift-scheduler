@@ -109,10 +109,15 @@ export async function getEventsAction(
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user || user.user_metadata?.role !== 'manager') {
+  if (!user) throw new Error('Not authorized')
+  const { getActiveTeam, getMyTeams } = await import('@/app/team-actions')
+  const activeTeam = await getActiveTeam()
+  const teams = await getMyTeams()
+  const role = teams.find((t) => t.id === activeTeam?.id)?.role
+  if (role !== 'manager' || !activeTeam) {
     throw new Error('Not authorized')
   }
-  const teamId = user.user_metadata?.team_id as string | undefined
+  const teamId = activeTeam.id
 
   let query = supabase
     .from('events')
