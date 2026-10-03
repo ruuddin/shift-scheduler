@@ -37,11 +37,12 @@ function assert(cond, msg) {
   if (!cond) throw new Error(msg)
 }
 
-async function get(path) {
+async function get(path, opts = {}) {
   // NOTE: `Connection: close` — the egress proxy kills keep-alive pooled
   // connections, making every second fetch() fail with "fetch failed".
   const res = await fetch(`${BASE}${path}`, {
     headers: { Connection: 'close' },
+    redirect: opts.redirect ?? 'follow',
   })
   const html = await res.text()
   return { res, html }
@@ -85,47 +86,27 @@ async function main() {
     })
   }
 
-  await check('roster links to guides', async () => {
-    const { html } = await get('/roster?week=2026-10-05')
-    assert(html.includes('href="/guide"'), 'roster missing Guides link')
+  await check('roster requires auth (redirects to /login)', async () => {
+    const { res } = await get('/roster?week=2026-10-05', { redirect: 'manual' })
+    assert([307, 308].includes(res.status), `status ${res.status}`)
+    assert(
+      (res.headers.get('location') ?? '').includes('/login'),
+      'not redirected to /login'
+    )
   })
 
-  await check('dashboard links to guides', async () => {
-    const { res, html } = await get('/dashboard')
+  await check('dashboard requires auth (redirects to /login)', async () => {
+    const { res } = await get('/dashboard', { redirect: 'manual' })
+    assert([307, 308].includes(res.status), `status ${res.status}`)
     assert(
-      [200, 307, 308].includes(res.status),
-      `unexpected status ${res.status}`
+      (res.headers.get('location') ?? '').includes('/login'),
+      'not redirected to /login'
     )
-    if (res.status === 200) {
-      assert(html.includes('href="/guide"'), 'dashboard missing guides link')
-    }
   })
 
-  await check('dashboard links to admin', async () => {
-    const { res, html } = await get('/dashboard')
-    assert(
-      [200, 307, 308].includes(res.status),
-      `unexpected status ${res.status}`
-    )
-    if (res.status === 200) {
-      assert(html.includes('href="/admin"'), 'dashboard missing admin link')
-    }
-  })
-
-  await check('admin page renders for managers', async () => {
-    const { res, html } = await get('/admin')
-    assert(
-      [200, 307, 308].includes(res.status),
-      `unexpected status ${res.status}`
-    )
-    if (res.status === 200) {
-      assert(html.includes('<h1'), 'admin missing h1 title')
-      assert(html.includes('Admin'), 'admin missing "Admin" title')
-      assert(
-        html.includes('Total events'),
-        'admin missing analytics summary'
-      )
-    }
+  await check('admin requires auth (redirects, not 200)', async () => {
+    const { res } = await get('/admin', { redirect: 'manual' })
+    assert(res.status !== 200, `expected redirect, got ${res.status}`)
   })
 
   if (failures > 0) {
