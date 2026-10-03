@@ -53,7 +53,16 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   const role = (user.user_metadata?.role as string) ?? 'employee'
-  const teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
+  // Prefer the real team name from the DB; fall back to signup metadata.
+  let teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
+  const { data: employee } = await supabase
+    .from('employees')
+    .select('team_id, teams(name)')
+    .eq('user_id', user.id)
+    .limit(1)
+    .single()
+  const dbTeamName = (employee?.teams as unknown as { name: string } | null)?.name
+  if (dbTeamName) teamName = dbTeamName
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
