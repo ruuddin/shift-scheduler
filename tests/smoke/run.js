@@ -85,7 +85,8 @@ async function main() {
   const h = ptHour()
   if (h >= 23 || h < 1) {
     await check('maintenance banner shows inside the nightly window', async () => {
-      const { res, html } = await get('/roster?week=2026-10-05')
+      // Banner lives in the root layout, so it's on /login too (roster needs auth).
+      const { res, html } = await get('/login')
       assert(res.status === 200, `status ${res.status}`)
       assert(html.includes('role="status"'), 'banner not rendered')
       assert(
