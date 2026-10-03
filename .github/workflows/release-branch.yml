@@ -1,0 +1,55 @@
+name: Release branch
+
+# After every successful production deployment, cut a release branch so
+# each stable release is marked in git history.
+#
+# How it works: on push to main, poll the production /api/version endpoint
+# until it reports the pushed commit SHA (meaning Vercel finished deploying
+# it), then create release/YYYY-MM-DD-<short-sha> from that commit.
+# No Vercel API token needed — the app itself reports what's live.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Wait for production deployment
+        id: wait
+        run: |
+          SHA="${{ github.sha }}"
+          URL="https://shift-scheduler-blond-two.vercel.app/api/version"
+          echo "Waiting for production to serve $SHA ..."
+          for i in $(seq 1 40); do
+            LIVE=$(curl -s --max-time 15 "$URL" | python3 -c "import json,sys; print(json.load(sys.stdin).get('sha',''))" 2>/dev/null || true)
+            echo "attempt $i: live sha = ${LIVE:-<none>}"
+            if [ "$LIVE" = "$SHA" ]; then
+              echo "deployed=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "Timed out waiting for production deployment of $SHA"
+          exit 1
+
+      - name: Cut release branch
+        if: steps.wait.outputs.deployed == 'true'
+        run: |
+          SHA="${{ github.sha }}"
+          SHORT=${SHA:0:7}
+          DATE=$(date -u +%Y-%m-%d)
+          BRANCH="release/${DATE}-${SHORT}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH" "$SHA"
+          git push origin "$BRANCH"
+          echo "Cut release branch: $BRANCH"
