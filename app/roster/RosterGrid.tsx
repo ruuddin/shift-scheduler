@@ -8,7 +8,8 @@ import {
   fmtTime,
   colorFor,
 } from '@/lib/schedule'
-import { createShiftAction, updateShiftAction, deleteShiftAction } from './actions'
+import { createShiftAction, updateShiftAction, deleteShiftAction, moveShiftAction } from './actions'
+import { logEventAction } from '@/app/event-actions'
 
 type Props = {
   employees: Employee[]
@@ -87,16 +88,25 @@ export default function RosterGrid({
         const starts_at = `${modal.date}T${start}:00Z`
         const ends_at = `${modal.date}T${end}:00Z`
         if (preview) {
-          setShifts((prev) => [
-            ...prev,
-            {
-              id: crypto.randomUUID(),
-              employee_id: modal.employeeId,
-              starts_at,
-              ends_at,
-              published: true,
+          const shift: Shift = {
+            id: crypto.randomUUID(),
+            employee_id: modal.employeeId,
+            starts_at,
+            ends_at,
+            published: true,
+          }
+          setShifts((prev) => [...prev, shift])
+          await logEventAction({
+            eventType: 'shift.created',
+            entityType: 'shift',
+            entityId: shift.id,
+            metadata: {
+              employee_name: empName(modal.employeeId),
+              date: modal.date,
+              starts_at: start,
+              ends_at: end,
             },
-          ])
+          })
         } else {
           const row = (await createShiftAction({
             employee_id: modal.employeeId,
@@ -114,7 +124,19 @@ export default function RosterGrid({
         setShifts((prev) =>
           prev.map((s) => (s.id === sh.id ? { ...s, starts_at, ends_at } : s))
         )
-        if (!preview) {
+        if (preview) {
+          await logEventAction({
+            eventType: 'shift.updated',
+            entityType: 'shift',
+            entityId: sh.id,
+            metadata: {
+              employee_name: empName(sh.employee_id),
+              date,
+              starts_at: start,
+              ends_at: end,
+            },
+          })
+        } else {
           try {
             await updateShiftAction(sh.id, {
               employee_id: sh.employee_id,
@@ -138,13 +160,25 @@ export default function RosterGrid({
   async function handleDelete() {
     if (!modal || modal.kind !== 'edit' || saving) return
     if (!confirm('Delete this shift?')) return
-    const id = modal.shift.id
+    const sh = modal.shift
     const prevShifts = shifts
-    setShifts((prev) => prev.filter((s) => s.id !== id))
+    setShifts((prev) => prev.filter((s) => s.id !== sh.id))
     setModal(null)
-    if (!preview) {
+    if (preview) {
+      await logEventAction({
+        eventType: 'shift.deleted',
+        entityType: 'shift',
+        entityId: sh.id,
+        metadata: {
+          employee_name: empName(sh.employee_id),
+          date: sh.starts_at.slice(0, 10),
+          starts_at: sh.starts_at.slice(11, 16),
+          ends_at: sh.ends_at.slice(11, 16),
+        },
+      })
+    } else {
       try {
-        await deleteShiftAction(id)
+        await deleteShiftAction(sh.id)
       } catch (err) {
         setShifts(prevShifts)
         alert(err instanceof Error ? err.message : 'Could not delete the shift.')
@@ -161,12 +195,27 @@ export default function RosterGrid({
     const ends_at = `${date}T${sh.ends_at.slice(11)}`
     if (starts_at === sh.starts_at && sh.employee_id === employeeId) return
     const prevShifts = shifts
+    const fromName = empName(sh.employee_id)
+    const toName = empName(employeeId)
+    const fromDate = sh.starts_at.slice(0, 10)
     setShifts((prev) =>
       prev.map((s) => (s.id === id ? { ...s, employee_id: employeeId, starts_at, ends_at } : s))
     )
-    if (!preview) {
+    if (preview) {
+      await logEventAction({
+        eventType: 'shift.moved',
+        entityType: 'shift',
+        entityId: id,
+        metadata: {
+          from_employee_name: fromName,
+          to_employee_name: toName,
+          from_date: fromDate,
+          to_date: date,
+        },
+      })
+    } else {
       try {
-        await updateShiftAction(id, { employee_id: employeeId, starts_at, ends_at })
+        await moveShiftAction(id, { employee_id: employeeId, starts_at, ends_at })
       } catch (err) {
         setShifts(prevShifts)
         alert(err instanceof Error ? err.message : 'Could not move the shift.')

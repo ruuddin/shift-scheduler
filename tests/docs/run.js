@@ -16,6 +16,7 @@ const GUIDES = [
   { path: '/guide/shifts', title: 'Adding, editing' },
   { path: '/guide/drag-and-drop', title: 'Drag-and-drop scheduling' },
   { path: '/guide/tour', title: 'Guided tour' },
+  { path: '/guide/admin', title: 'Admin &amp; event history' },
 ]
 
 let failures = 0
@@ -95,6 +96,33 @@ async function main() {
     )
     if (res.status === 200) {
       assert(html.includes('href="/guide"'), 'dashboard missing guides link')
+    }
+  })
+
+  await check('dashboard links to admin', async () => {
+    const { res, html } = await get('/dashboard')
+    assert(
+      [200, 307, 308].includes(res.status),
+      `unexpected status ${res.status}`
+    )
+    if (res.status === 200) {
+      assert(html.includes('href="/admin"'), 'dashboard missing admin link')
+    }
+  })
+
+  await check('admin page renders for managers', async () => {
+    const { res, html } = await get('/admin')
+    assert(
+      [200, 307, 308].includes(res.status),
+      `unexpected status ${res.status}`
+    )
+    if (res.status === 200) {
+      assert(html.includes('<h1'), 'admin missing h1 title')
+      assert(html.includes('Admin'), 'admin missing "Admin" title')
+      assert(
+        html.includes('Total events'),
+        'admin missing analytics summary'
+      )
     }
   })
 

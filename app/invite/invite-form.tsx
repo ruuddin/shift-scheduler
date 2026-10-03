@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { logEventAction } from '@/app/event-actions'
 
 export default function InviteForm() {
   const [name, setName] = useState('')
@@ -21,6 +22,11 @@ export default function InviteForm() {
       setMessage(error.message)
       return
     }
+    await logEventAction({
+      eventType: 'employee.invited',
+      entityType: 'employee',
+      metadata: { name, email },
+    })
     setStatus('done')
     setMessage(`${email} added — they can sign up now.`)
     setName('')

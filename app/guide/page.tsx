@@ -36,6 +36,11 @@ const GUIDES = [
     title: 'Guided tour',
     blurb: 'Replay the first-run tour of the roster anytime.',
   },
+  {
+    href: '/guide/admin',
+    title: 'Admin & event history',
+    blurb: 'Browse every action on your team and read the analytics.',
+  },
 ]
 
 export default function GuideIndexPage() {

@@ -48,3 +48,21 @@ create table time_off_requests (
 );
 
 -- Day 3: enable row-level security + per-role policies on all tables.
+
+-- Admin event log (Day 11): append-only history of every user action.
+-- Written server-side via logEventAction; read by the manager-only /admin page.
+create table events (
+  id uuid primary key default gen_random_uuid(),
+  team_id uuid references teams(id) on delete cascade,
+  actor_id uuid, -- supabase auth user id (null for pre-auth events like signup)
+  actor_email text,
+  actor_role text, -- manager | employee | null
+  event_type text not null, -- e.g. 'shift.created', 'auth.login'
+  entity_type text, -- 'shift' | 'employee' | 'auth' | 'team'
+  entity_id text,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz default now()
+);
+
+create index events_team_created_idx on events (team_id, created_at desc);
+create index events_type_idx on events (event_type);

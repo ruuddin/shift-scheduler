@@ -2,11 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { logEventAction } from '@/app/event-actions'
 
 export default function SignOutButton() {
   const router = useRouter()
 
   async function signOut() {
+    // Log before the session is destroyed so the actor is still known.
+    await logEventAction({ eventType: 'auth.logout' })
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
