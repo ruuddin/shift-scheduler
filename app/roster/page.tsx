@@ -2,12 +2,13 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import {
-  getWeekSchedule,
+  getMockWeekSchedule,
   startOfWeekMonday,
   toISODate,
   addDays,
   fmtDay,
 } from '@/lib/schedule'
+import { getLiveWeekSchedule } from '@/lib/schedule-server'
 import RosterGrid from './RosterGrid'
 import GuidedTour from './GuidedTour'
 import { isFlagEnabled } from '@/lib/flags'
@@ -44,7 +45,9 @@ export default async function RosterPage({
   const params = await searchParams
   const weekStart = parseWeek(params.week)
   const days = Array.from({ length: 7 }, (_, i) => toISODate(addDays(weekStart, i)))
-  const { employees, shifts } = await getWeekSchedule(weekStart)
+  const { employees, shifts } = preview
+    ? getMockWeekSchedule(weekStart)
+    : await getLiveWeekSchedule(weekStart)
   const staff = employees.filter((e) => e.role === 'employee')
 
   const prevWeek = toISODate(addDays(weekStart, -7))
