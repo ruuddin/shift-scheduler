@@ -19,6 +19,7 @@ const GUIDES = [
   { path: '/guide/admin', title: 'Admin &amp; event history' },
   { path: '/guide/teams', title: 'Working with multiple teams' },
   { path: '/guide/auth', title: 'Signing up &amp; signing in' },
+  { path: '/guide/branding', title: 'Team branding' },
 ]
 
 let failures = 0

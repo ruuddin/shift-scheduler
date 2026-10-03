@@ -51,6 +51,11 @@ const GUIDES = [
     title: 'Signing up & signing in',
     blurb: 'Create your account, join teams, and sign in on any device.',
   },
+  {
+    href: '/guide/branding',
+    title: 'Team branding',
+    blurb: 'Add your logo and pick your team color.',
+  },
 ]
 
 export default function GuideIndexPage() {

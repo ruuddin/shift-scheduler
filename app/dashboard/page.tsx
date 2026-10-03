@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getMyTeams, getActiveTeam } from '@/app/team-actions'
+import { getBranding } from '@/app/settings/branding/actions'
 import SignOutButton from './sign-out-button'
 import TeamSwitcher from '@/app/team-switcher'
 
@@ -57,20 +58,37 @@ export default async function DashboardPage() {
   const role = (user.user_metadata?.role as string) ?? 'employee'
   const teams = await getMyTeams()
   const activeTeam = await getActiveTeam()
+  const branding = await getBranding()
   // Prefer the real team name from the DB; fall back to signup metadata.
   let teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
   if (activeTeam?.name) teamName = activeTeam.name
   // Role is per-team: prefer the role on the active team membership.
   const activeRole = teams.find((t) => t.id === activeTeam?.id)?.role ?? role
+  const primaryColor = branding.primaryColor ?? '#18181b'
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-8 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-bold">{teamName}</h1>
-          <p className="text-sm text-zinc-500">
-            Signed in as {user.email} · {activeRole}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          {branding.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={branding.logoUrl}
+              alt={`${teamName} logo`}
+              className="h-12 w-12 shrink-0 rounded-lg border object-contain"
+            />
+          )}
+          <div className="min-w-0">
+            <h1
+              className="truncate text-2xl font-bold"
+              style={{ color: primaryColor }}
+            >
+              {teamName}
+            </h1>
+            <p className="text-sm text-zinc-500">
+              Signed in as {user.email} · {activeRole}
+            </p>
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <TeamSwitcher teams={teams} activeId={activeTeam?.id ?? null} />
@@ -108,6 +126,12 @@ export default async function DashboardPage() {
               className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
             >
               User guides
+            </Link>
+            <Link
+              href="/settings/branding"
+              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              Team branding
             </Link>
           </div>
         </div>
