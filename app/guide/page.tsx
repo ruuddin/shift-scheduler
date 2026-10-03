@@ -46,6 +46,11 @@ const GUIDES = [
     title: 'Working with multiple teams',
     blurb: 'Switch between your teams and create new ones.',
   },
+  {
+    href: '/guide/auth',
+    title: 'Signing up & signing in',
+    blurb: 'Create your account, join teams, and sign in on any device.',
+  },
 ]
 
 export default function GuideIndexPage() {

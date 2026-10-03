@@ -18,6 +18,7 @@ const GUIDES = [
   { path: '/guide/tour', title: 'Guided tour' },
   { path: '/guide/admin', title: 'Admin &amp; event history' },
   { path: '/guide/teams', title: 'Working with multiple teams' },
+  { path: '/guide/auth', title: 'Signing up &amp; signing in' },
 ]
 
 let failures = 0
