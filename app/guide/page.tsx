@@ -41,6 +41,11 @@ const GUIDES = [
     title: 'Admin & event history',
     blurb: 'Browse every action on your team and read the analytics.',
   },
+  {
+    href: '/guide/teams',
+    title: 'Working with multiple teams',
+    blurb: 'Switch between your teams and create new ones.',
+  },
 ]
 
 export default function GuideIndexPage() {

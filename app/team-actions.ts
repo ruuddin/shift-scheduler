@@ -1,6 +1,106 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+
+const ACTIVE_TEAM_COOKIE = 'active_team_id'
+
+// Lists every team the current user belongs to (via their employee rows).
+export async function getMyTeams() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return []
+
+  const { data: rows } = await supabase
+    .from('employees')
+    .select('team_id, role, teams(id, name)')
+    .eq('user_id', user.id)
+
+  const teams = (rows ?? [])
+    .filter((r) => r.team_id)
+    .map((r) => {
+      const t = r.teams as unknown as { id: string; name: string } | null
+      return {
+        id: r.team_id as string,
+        name: t?.name ?? 'Unnamed team',
+        role: (r.role as string) ?? 'employee',
+      }
+    })
+
+  // De-dupe by team id (a user should only have one row per team, but be safe).
+  const seen = new Set<string>()
+  return teams.filter((t) => (seen.has(t.id) ? false : (seen.add(t.id), true)))
+}
+
+// The team the user is currently working in. Reads the active_team_id cookie,
+// falls back to their first team. Returns null when the user has no team.
+export async function getActiveTeam() {
+  const teams = await getMyTeams()
+  if (teams.length === 0) return null
+
+  const cookieStore = await cookies()
+  const activeId = cookieStore.get(ACTIVE_TEAM_COOKIE)?.value
+  const match = activeId ? teams.find((t) => t.id === activeId) : undefined
+  return match ?? teams[0] ?? null
+}
+
+// Switches the active team. Validates the user actually belongs to it.
+export async function setActiveTeam(teamId: string) {
+  const teams = await getMyTeams()
+  if (!teams.some((t) => t.id === teamId)) {
+    throw new Error('You are not a member of that team.')
+  }
+  const cookieStore = await cookies()
+  cookieStore.set(ACTIVE_TEAM_COOKIE, teamId, {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365, // 1 year
+    sameSite: 'lax',
+  })
+  return { id: teamId }
+}
+
+// Creates an additional team for the logged-in user (they become its manager)
+// and switches to it.
+export async function createTeam(name: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not signed in')
+  const clean = name.trim()
+  if (!clean) throw new Error('Team name is required.')
+
+  const { data: team, error: teamError } = await supabase
+    .from('teams')
+    .insert({ name: clean })
+    .select('id')
+    .single()
+  if (teamError) throw new Error(teamError.message)
+
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    user.email ??
+    'Manager'
+  const { error: empError } = await supabase.from('employees').insert({
+    team_id: team.id,
+    user_id: user.id,
+    name: displayName,
+    email: user.email,
+    role: 'manager',
+  })
+  if (empError) throw new Error(empError.message)
+
+  const cookieStore = await cookies()
+  cookieStore.set(ACTIVE_TEAM_COOKIE, team.id, {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: 'lax',
+  })
+
+  return { id: team.id as string, name: clean }
+}
 
 // Creates a team and the manager's employee row for a newly signed-up user.
 // Called once right after signup when the user wasn't linked to an invite.
@@ -43,39 +143,18 @@ export async function createTeamForNewUser(teamName: string, displayName: string
     data: { ...user.user_metadata, team_id: team.id },
   })
 
+  // Make it the active team.
+  const cookieStore = await cookies()
+  cookieStore.set(ACTIVE_TEAM_COOKIE, team.id, {
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: 'lax',
+  })
+
   return { teamId: team.id as string }
 }
 
-// Resolves the current user's team via their employee row.
-// Falls back to the team_id in auth metadata (set at signup).
+// Back-compat wrapper: resolves the user's active team.
 export async function getMyTeam() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('team_id, teams(id, name)')
-    .eq('user_id', user.id)
-    .limit(1)
-    .single()
-
-  if (employee?.team_id) {
-    const teams = employee.teams as unknown as { id: string; name: string } | null
-    return { id: employee.team_id as string, name: teams?.name ?? null }
-  }
-
-  const metaTeamId = user.user_metadata?.team_id as string | undefined
-  if (metaTeamId) {
-    const { data: team } = await supabase
-      .from('teams')
-      .select('id, name')
-      .eq('id', metaTeamId)
-      .single()
-    if (team) return { id: team.id, name: team.name }
-  }
-
-  return null
+  return getActiveTeam()
 }

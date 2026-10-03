@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getMyTeams, getActiveTeam } from '@/app/team-actions'
 import SignOutButton from './sign-out-button'
+import TeamSwitcher from '@/app/team-switcher'
 
 export default async function DashboardPage() {
   const preview = !process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -53,30 +55,30 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   const role = (user.user_metadata?.role as string) ?? 'employee'
+  const teams = await getMyTeams()
+  const activeTeam = await getActiveTeam()
   // Prefer the real team name from the DB; fall back to signup metadata.
   let teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
-  const { data: employee } = await supabase
-    .from('employees')
-    .select('team_id, teams(name)')
-    .eq('user_id', user.id)
-    .limit(1)
-    .single()
-  const dbTeamName = (employee?.teams as unknown as { name: string } | null)?.name
-  if (dbTeamName) teamName = dbTeamName
+  if (activeTeam?.name) teamName = activeTeam.name
+  // Role is per-team: prefer the role on the active team membership.
+  const activeRole = teams.find((t) => t.id === activeTeam?.id)?.role ?? role
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{teamName}</h1>
+      <div className="mb-8 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-bold">{teamName}</h1>
           <p className="text-sm text-zinc-500">
-            Signed in as {user.email} · {role}
+            Signed in as {user.email} · {activeRole}
           </p>
         </div>
-        <SignOutButton />
+        <div className="flex shrink-0 items-center gap-2">
+          <TeamSwitcher teams={teams} activeId={activeTeam?.id ?? null} />
+          <SignOutButton />
+        </div>
       </div>
 
-      {role === 'manager' ? (
+      {activeRole === 'manager' ? (
         <div className="rounded-xl border p-6">
           <h2 className="mb-2 font-semibold">Manager</h2>
           <p className="mb-4 text-sm text-zinc-500">
