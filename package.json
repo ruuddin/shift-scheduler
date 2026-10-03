@@ -11,7 +11,8 @@
     "test:load": "node tests/load/run.js",
     "test:docs": "node tests/docs/run.js",
     "test:security": "node tests/security/run.js",
-    "test:nightly": "npm run test:e2e && npm run test:load && npm run test:docs && npm run test:security"
+    "test:nightly": "npm run test:e2e && npm run test:load && npm run test:docs && npm run test:security && npm run test:api",
+    "test:api": "node tests/api/run.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
