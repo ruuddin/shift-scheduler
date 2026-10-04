@@ -6,6 +6,7 @@ import { getBranding } from '@/app/settings/branding/actions'
 import { isFlagEnabledForTeam } from '@/lib/flags'
 import SignOutButton from './sign-out-button'
 import TeamSwitcher from '@/app/team-switcher'
+import AnnouncementsFeed from './announcements'
 
 export default async function DashboardPage() {
   const preview = !process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -106,7 +107,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {isManager ? (
+      <div className="space-y-4">
+        <AnnouncementsFeed />
+        {isManager ? (
         <div className="rounded-xl border p-6">
           <h2 className="mb-2 font-semibold">Manager</h2>
           <p className="mb-4 text-sm text-zinc-500">
@@ -166,6 +169,7 @@ export default async function DashboardPage() {
           </p>
         </div>
       )}
+      </div>
     </main>
   )
 }

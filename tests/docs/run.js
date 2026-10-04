@@ -23,6 +23,7 @@ const GUIDES = [
   { path: '/guide/flags', title: 'Feature flags' },
   { path: '/guide/jobs', title: 'Background jobs' },
   { path: '/guide/organizations', title: 'Organizations' },
+  { path: '/guide/announcements', title: 'Announcements' },
 ]
 
 let failures = 0
