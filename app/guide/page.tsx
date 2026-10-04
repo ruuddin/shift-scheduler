@@ -86,6 +86,11 @@ const GUIDES = [
     title: 'Shift swaps',
     blurb: 'Request, approve, and track shift swaps.',
   },
+  {
+    href: '/guide/time-off',
+    title: 'Time off & availability',
+    blurb: 'Request time off and set weekly availability.',
+  },
 ]
 
 export default function GuideIndexPage() {

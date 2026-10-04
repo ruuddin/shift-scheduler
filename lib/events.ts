@@ -84,6 +84,26 @@ export const EVENT_TYPES = {
     label: 'Swap cancelled',
     description: 'An employee cancelled their pending swap request.',
   },
+  'timeoff.requested': {
+    label: 'Time off requested',
+    description: 'An employee requested time off.',
+  },
+  'timeoff.approved': {
+    label: 'Time off approved',
+    description: 'A manager approved a time-off request.',
+  },
+  'timeoff.declined': {
+    label: 'Time off declined',
+    description: 'A manager declined a time-off request.',
+  },
+  'timeoff.cancelled': {
+    label: 'Time off cancelled',
+    description: 'An employee cancelled their pending time-off request.',
+  },
+  'availability.updated': {
+    label: 'Availability updated',
+    description: 'An employee updated their weekly availability.',
+  },
 } as const
 
 export type EventType = keyof typeof EVENT_TYPES

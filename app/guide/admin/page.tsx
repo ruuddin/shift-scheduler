@@ -77,6 +77,16 @@ export default function AdminGuide() {
             “pending” mean the client&apos;s manager hasn&apos;t reviewed them —
             not a bug.
           </>,
+          <>
+            <strong>Time off & availability</strong> (flag{' '}
+            <code>time-off</code>, default on): employees request date ranges
+            and set a weekly availability template; managers approve. Owner
+            controls: the global default under <strong>Feature flags</strong>,
+            and the per-client org ceiling on each client&apos;s detail page.
+            Watch <code>timeoff.requested</code> / <code>timeoff.approved</code>{' '}
+            / <code>timeoff.declined</code> / <code>timeoff.cancelled</code> and{' '}
+            <code>availability.updated</code> in client activity.
+          </>,
         ]}
       />
       <Note tone="warn">
