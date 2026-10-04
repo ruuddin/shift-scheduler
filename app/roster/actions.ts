@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isFlagEnabled } from '@/lib/flags'
 import { logEventAction } from '@/app/event-actions'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 
 function requireCrudEnabled() {
   if (!isFlagEnabled('shift-crud')) {
@@ -17,15 +18,9 @@ async function requireManager() {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authorized')
-  const { getActiveTeam, getMyTeams } = await import('@/app/team-actions')
-  const activeTeam = await getActiveTeam()
-  if (!activeTeam) throw new Error('No team selected')
-  const teams = await getMyTeams()
-  const membership = teams.find((t) => t.id === activeTeam.id)
-  if (!membership || membership.role !== 'manager') {
-    throw new Error('Not authorized')
-  }
-  return { supabase, teamId: activeTeam.id }
+  // Manager = holds a manager-granting role in the active team's org.
+  const m = await requireOrgManagerForActiveTeam()
+  return { supabase, teamId: m.teamId }
 }
 
 async function employeeName(

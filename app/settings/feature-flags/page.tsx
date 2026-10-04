@@ -33,7 +33,7 @@ export default async function FeatureFlagsPage() {
         </p>
       )}
       <div className="mt-6">
-        <ManagerFlagsList initial={data.flags} />
+        <ManagerFlagsList initial={data.flags} teams={data.teams} />
       </div>
       <p className="mt-6 text-xs text-zinc-400">
         Every change is recorded — who toggled what and when is visible in the{' '}

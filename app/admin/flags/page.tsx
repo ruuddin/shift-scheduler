@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAdminFlags, getFlagHistoryAction } from '@/app/flags-actions'
-import AdminFlagsList, { ToggleHistory } from './flags-ui'
+import { getAdminOrgFlagsAction } from '@/app/org-actions'
+import AdminFlagsList, { ToggleHistory, OrgFlagsSection } from './flags-ui'
 
 export const metadata = {
   title: 'Admin — feature flags — Shift Scheduler',
@@ -9,8 +10,12 @@ export const metadata = {
 
 export default async function AdminFlagsPage() {
   let flagsData
+  let orgFlags
   try {
-    flagsData = await getAdminFlags()
+    ;[flagsData, orgFlags] = await Promise.all([
+      getAdminFlags(),
+      getAdminOrgFlagsAction().catch(() => []),
+    ])
   } catch {
     redirect('/dashboard')
   }
@@ -25,8 +30,9 @@ export default async function AdminFlagsPage() {
       </nav>
       <h1 className="text-2xl font-bold md:text-3xl">Feature flags</h1>
       <p className="mt-2 text-sm text-zinc-500">
-        Global defaults, per-team overrides, and the full toggle history. The
-        default applies to every team without its own override.
+        Global defaults, organization ceilings, per-team overrides, and the
+        full toggle history. The default applies to every team without its own
+        override.
       </p>
       {flagsData.preview && (
         <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
@@ -37,6 +43,19 @@ export default async function AdminFlagsPage() {
       <div className="mt-6">
         <AdminFlagsList initial={flagsData.flags} />
       </div>
+
+      {orgFlags.length > 0 && (
+        <>
+          <h2 className="mb-3 mt-10 text-lg font-semibold">
+            Organization ceilings
+          </h2>
+          <p className="mb-3 text-sm text-zinc-500">
+            An org set to <strong>Off</strong> disables the feature for all its
+            teams — no team can turn it back on.
+          </p>
+          <OrgFlagsSection initial={orgFlags} />
+        </>
+      )}
 
       <h2 className="mb-3 mt-10 text-lg font-semibold">Toggle history</h2>
       <p className="mb-3 text-sm text-zinc-500">

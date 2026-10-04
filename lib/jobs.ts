@@ -94,7 +94,8 @@ async function runAnalyticsRollup(): Promise<string> {
     from += pageSize
   }
 
-  // Upsert one row per (day, team).
+  // Upsert one row per (day, team) via a security-definer function —
+  // the cron route has no user session, so direct writes would hit RLS.
   let rows = 0
   const batch: {
     day: string
@@ -115,15 +116,15 @@ async function runAnalyticsRollup(): Promise<string> {
   }
   const CHUNK = 200
   for (let i = 0; i < batch.length; i += CHUNK) {
-    const { error } = await writer
-      .from('analytics_daily_active')
-      .upsert(batch.slice(i, i + CHUNK), { onConflict: 'day,team_id' })
+    const { error } = await writer.rpc('analytics_rollup_upsert', {
+      p_rows: batch.slice(i, i + CHUNK),
+    })
     if (error) throw new Error(`rollup write failed: ${error.message}`)
     rows += Math.min(CHUNK, batch.length - i)
   }
 
   // Prune anything older than the 90-day window.
-  await writer.from('analytics_daily_active').delete().lt('day', sinceDay)
+  await writer.rpc('analytics_rollup_prune', { p_before_day: sinceDay })
 
   return `Rolled up ${rows} day-team rows across ${seen.size} active day-teams; pruned rows before ${sinceDay}.`
 }
@@ -157,37 +158,32 @@ export async function runJob(
   }
 
   const writer = await getWriter()
-  const { data: runRow, error: insertError } = await writer
-    .from('job_runs')
-    .insert({ job_key: key, status: 'running', triggered_by: triggeredBy })
-    .select('id')
-    .single()
-  if (insertError || !runRow) {
+  const { data: runId, error: insertError } = await writer.rpc(
+    'job_run_start',
+    { p_job_key: key, p_triggered_by: triggeredBy }
+  )
+  if (insertError || !runId) {
     throw new Error(`Could not record job run: ${insertError?.message}`)
   }
 
   const started = Date.now()
   try {
     const output = await job.run()
-    await writer
-      .from('job_runs')
-      .update({
-        status: 'succeeded',
-        finished_at: new Date().toISOString(),
-        output: `${output} (${((Date.now() - started) / 1000).toFixed(1)}s)`,
-      })
-      .eq('id', (runRow as { id: string }).id)
+    await writer.rpc('job_run_finish', {
+      p_run_id: runId,
+      p_status: 'succeeded',
+      p_output: `${output} (${((Date.now() - started) / 1000).toFixed(1)}s)`,
+      p_error: null,
+    })
     return { status: 'succeeded', output }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    await writer
-      .from('job_runs')
-      .update({
-        status: 'failed',
-        finished_at: new Date().toISOString(),
-        error: message,
-      })
-      .eq('id', (runRow as { id: string }).id)
+    await writer.rpc('job_run_finish', {
+      p_run_id: runId,
+      p_status: 'failed',
+      p_output: null,
+      p_error: message,
+    })
     return { status: 'failed', output: message }
   }
 }

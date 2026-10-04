@@ -66,6 +66,11 @@ const GUIDES = [
     title: 'Background jobs',
     blurb: 'Watch scheduled jobs, their history, and run them on demand.',
   },
+  {
+    href: '/guide/organizations',
+    title: 'Organizations',
+    blurb: 'Roles, reporting lines, and org-wide feature flags.',
+  },
 ]
 
 export default function GuideIndexPage() {

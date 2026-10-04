@@ -63,6 +63,12 @@ export default async function DashboardPage() {
   const brandingOn = activeTeam
     ? await isFlagEnabledForTeam('team-branding', activeTeam.id, user.id)
     : true
+  // Manager status now comes from the org role (is_manager), not the
+  // legacy per-team employee row.
+  const { getTeamOrgId, isOrgManager } = await import('@/lib/orgs')
+  const activeOrgId = activeTeam ? await getTeamOrgId(activeTeam.id) : null
+  const isManager =
+    !!activeOrgId && (await isOrgManager(user.id, activeOrgId))
   // Prefer the real team name from the DB; fall back to signup metadata.
   let teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
   if (activeTeam?.name) teamName = activeTeam.name
@@ -100,7 +106,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {activeRole === 'manager' ? (
+      {isManager ? (
         <div className="rounded-xl border p-6">
           <h2 className="mb-2 font-semibold">Manager</h2>
           <p className="mb-4 text-sm text-zinc-500">
@@ -142,6 +148,12 @@ export default async function DashboardPage() {
               className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
             >
               Feature flags
+            </Link>
+            <Link
+              href="/settings/organization"
+              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              Organization
             </Link>
           </div>
         </div>

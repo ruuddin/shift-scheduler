@@ -46,6 +46,11 @@ export default function SignupPage() {
           .is('user_id', null)
           .select('id')
         linkedToInvite = !!linked && linked.length > 0
+        if (linkedToInvite) {
+          // Join the team's organization as Employee.
+          const { linkInviteToOrg } = await import('@/app/team-actions')
+          await linkInviteToOrg().catch(() => {})
+        }
       } catch {
         /* employees table / RLS not ready yet */
       }

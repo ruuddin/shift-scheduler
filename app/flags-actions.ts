@@ -1,8 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getActiveTeam, getMyTeams } from '@/app/team-actions'
+import { getMyTeams } from '@/app/team-actions'
 import { logEventAction } from '@/app/event-actions'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 import {
   getFlagsCatalog,
   getFlagRollout,
@@ -19,16 +20,15 @@ function isPreview(): boolean {
 }
 
 async function requireManager() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not signed in')
-  const activeTeam = await getActiveTeam()
+  // Manager = holds a manager-granting role in the active team's org.
+  const m = await requireOrgManagerForActiveTeam()
   const teams = await getMyTeams()
-  const role = teams.find((t) => t.id === activeTeam?.id)?.role
-  if (!activeTeam || role !== 'manager') throw new Error('Not authorized')
-  return { user, activeTeam, teams }
+  return {
+    user: { id: m.userId, email: m.email },
+    activeTeam: { id: m.teamId, name: m.teamName },
+    orgId: m.orgId,
+    teams,
+  }
 }
 
 export type ManagerFlagRow = FlagInfo & {
@@ -41,6 +41,8 @@ export type ManagerFlagRow = FlagInfo & {
 /** Manager view: every flag + its state for the manager's active team. */
 export async function getManagerFlags(): Promise<{
   teamName: string
+  teamId: string
+  teams: { id: string; name: string }[]
   flags: ManagerFlagRow[]
   preview: boolean
 }> {
@@ -48,6 +50,8 @@ export async function getManagerFlags(): Promise<{
     const catalog = await getFlagsCatalog()
     return {
       teamName: 'Demo Cafe',
+      teamId: 'demo',
+      teams: [{ id: 'demo', name: 'Demo Cafe' }],
       preview: true,
       flags: catalog.map((f) => ({
         ...f,
@@ -58,7 +62,7 @@ export async function getManagerFlags(): Promise<{
       })),
     }
   }
-  const { user, activeTeam } = await requireManager()
+  const { user, activeTeam, teams } = await requireManager()
   const catalog = await getFlagsCatalog()
   const flags: ManagerFlagRow[] = []
   for (const f of catalog) {
@@ -68,7 +72,13 @@ export async function getManagerFlags(): Promise<{
     ])
     flags.push({ ...f, enabled_for_team: enabled, ...rollout })
   }
-  return { teamName: activeTeam.name, flags, preview: false }
+  return {
+    teamName: activeTeam.name,
+    teamId: activeTeam.id,
+    teams: teams.map((t) => ({ id: t.id, name: t.name })),
+    flags,
+    preview: false,
+  }
 }
 
 /** Manager toggles a flag for their active team only. */
@@ -125,11 +135,25 @@ export async function getAdminFlags(): Promise<{
   const supabase = await createClient()
   const catalog = await getFlagsCatalog()
 
-  const { data: myTeams } = await supabase.from('teams').select('id, name')
+  // Scope to orgs the manager belongs to — no cross-org leakage.
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: memberships } = await supabase
+    .from('org_memberships')
+    .select('org_id')
+    .eq('user_id', user!.id)
+  const orgIds = ((memberships ?? []) as { org_id: string }[]).map((m) => m.org_id)
+
+  const { data: myTeams } = orgIds.length
+    ? await supabase.from('teams').select('id, name').in('org_id', orgIds)
+    : { data: [] as { id: string; name: string }[] }
   const teamList = (myTeams ?? []) as { id: string; name: string }[]
-  const { data: overrides } = await supabase
-    .from('team_feature_flags')
-    .select('flag_key, team_id, enabled')
+  const teamIds = teamList.map((t) => t.id)
+  const { data: overrides } = teamIds.length
+    ? await supabase
+        .from('team_feature_flags')
+        .select('flag_key, team_id, enabled')
+        .in('team_id', teamIds)
+    : { data: [] as { flag_key: string; team_id: string; enabled: boolean }[] }
   const overrideRows = (overrides ?? []) as {
     flag_key: string
     team_id: string

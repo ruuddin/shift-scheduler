@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getActiveTeam, getMyTeams } from '@/app/team-actions'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 import { getBranding } from './actions'
 import BrandingForm from './branding-form'
 
@@ -15,10 +15,13 @@ export default async function BrandingSettingsPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const activeTeam = await getActiveTeam()
-  const teams = await getMyTeams()
-  const role = teams.find((t) => t.id === activeTeam?.id)?.role
-  if (role !== 'manager') redirect('/dashboard')
+  let teamName = 'your team'
+  try {
+    const m = await requireOrgManagerForActiveTeam()
+    teamName = m.teamName
+  } catch {
+    redirect('/dashboard')
+  }
 
   const branding = await getBranding()
 
@@ -26,7 +29,7 @@ export default async function BrandingSettingsPage() {
     <main className="mx-auto max-w-md px-4 py-10">
       <h1 className="mb-1 text-2xl font-bold">Team branding</h1>
       <p className="mb-6 text-sm text-zinc-500">
-        {activeTeam?.name} — your logo and colors show across the app.
+        {teamName} — your logo and colors show across the app.
       </p>
       <BrandingForm initial={branding} />
     </main>

@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { ensureOrgForTeam, addUserToTeamOrg } from '@/lib/orgs'
 
 const ACTIVE_TEAM_COOKIE = 'active_team_id'
 
@@ -92,6 +93,15 @@ export async function createTeam(name: string) {
   })
   if (empError) throw new Error(empError.message)
 
+  // Every team gets its own organization; the creator becomes its Owner.
+  try {
+    await ensureOrgForTeam(team.id as string, clean, user.id)
+  } catch (e) {
+    throw new Error(
+      e instanceof Error ? e.message : 'Could not set up organization.'
+    )
+  }
+
   const cookieStore = await cookies()
   cookieStore.set(ACTIVE_TEAM_COOKIE, team.id, {
     path: '/',
@@ -138,6 +148,15 @@ export async function createTeamForNewUser(teamName: string, displayName: string
   })
   if (empError) throw new Error(empError.message)
 
+  // Every team gets its own organization; the creator becomes its Owner.
+  try {
+    await ensureOrgForTeam(team.id as string, teamName, user.id)
+  } catch (e) {
+    throw new Error(
+      e instanceof Error ? e.message : 'Could not set up organization.'
+    )
+  }
+
   // Stamp team_id into auth metadata for event logging + dashboard.
   await supabase.auth.updateUser({
     data: { ...user.user_metadata, team_id: team.id },
@@ -157,4 +176,26 @@ export async function createTeamForNewUser(teamName: string, displayName: string
 // Back-compat wrapper: resolves the user's active team.
 export async function getMyTeam() {
   return getActiveTeam()
+}
+
+// Called after an invited employee's signup links their auth user to the
+// employee row: adds them to the team's org as Employee (reporting to Owner).
+// Safe to call repeatedly.
+export async function linkInviteToOrg(): Promise<void> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return
+  const { data: rows } = await supabase
+    .from('employees')
+    .select('team_id')
+    .eq('user_id', user.id)
+  for (const r of (rows ?? []) as { team_id: string }[]) {
+    try {
+      await addUserToTeamOrg(r.team_id, user.id)
+    } catch {
+      // best-effort: org membership must not break signup
+    }
+  }
 }

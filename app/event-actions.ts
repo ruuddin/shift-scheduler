@@ -8,6 +8,7 @@ import {
   getMemoryEvents,
   pushMemoryEvent,
 } from '@/lib/events'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 
 function isPreview(): boolean {
   return !process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -110,14 +111,8 @@ export async function getEventsAction(
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authorized')
-  const { getActiveTeam, getMyTeams } = await import('@/app/team-actions')
-  const activeTeam = await getActiveTeam()
-  const teams = await getMyTeams()
-  const role = teams.find((t) => t.id === activeTeam?.id)?.role
-  if (role !== 'manager' || !activeTeam) {
-    throw new Error('Not authorized')
-  }
-  const teamId = activeTeam.id
+  // Manager = holds a manager-granting role in the active team's org.
+  const { teamId } = await requireOrgManagerForActiveTeam()
 
   let query = supabase
     .from('events')
