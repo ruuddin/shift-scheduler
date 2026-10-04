@@ -1,16 +1,16 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
+import { requireOwner } from '@/lib/owner'
 import { GuideHeader, Steps, Note } from '@/app/guide/components'
 
 export const metadata = {
   title: 'Troubleshooting — Shift Scheduler admin',
 }
 
-// Manager-only: the ops runbook lives on the admin portal.
+// Owner-only: the ops runbook lives on the admin portal.
 export default async function TroubleshootingPage() {
   try {
-    await requireOrgManagerForActiveTeam()
+    await requireOwner()
   } catch {
     redirect('/dashboard')
   }

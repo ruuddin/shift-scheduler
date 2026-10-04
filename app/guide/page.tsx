@@ -38,8 +38,13 @@ const GUIDES = [
   },
   {
     href: '/guide/admin',
-    title: 'Admin & event history',
-    blurb: 'Browse every action on your team and read the analytics.',
+    title: 'Admin portal',
+    blurb: "The owner's console for managing clients.",
+  },
+  {
+    href: '/guide/activity',
+    title: 'Team activity',
+    blurb: 'Every action on your team, with analytics and search.',
   },
   {
     href: '/guide/teams',

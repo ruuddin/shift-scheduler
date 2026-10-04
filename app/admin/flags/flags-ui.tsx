@@ -5,10 +5,6 @@ import {
   toggleGlobalFlag,
   type AdminFlagRow,
 } from '@/app/flags-actions'
-import {
-  toggleOrgFlagForAction,
-  type AdminOrgFlagRow,
-} from '@/app/org-actions'
 
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
@@ -167,98 +163,6 @@ export function ToggleHistory({  history,
           ))}
         </tbody>
       </table>
-    </div>
-  )
-}
-
-export function OrgFlagsSection({ initial }: { initial: AdminOrgFlagRow[] }) {
-  const [rows, setRows] = useState(initial)
-  const [busy, setBusy] = useState<string | null>(null)
-  const [error, setError] = useState('')
-
-  async function onToggle(orgId: string, flagKey: string, enabled: boolean) {
-    const key = `${orgId}:${flagKey}`
-    setBusy(key)
-    setError('')
-    try {
-      await toggleOrgFlagForAction(orgId, flagKey, enabled)
-      setRows((rs) =>
-        rs.map((r) =>
-          r.org_id === orgId
-            ? {
-                ...r,
-                flags: r.flags.map((f) =>
-                  f.flag_key === flagKey ? { ...f, org_enabled: enabled } : f
-                ),
-              }
-            : r
-        )
-      )
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save.')
-    } finally {
-      setBusy(null)
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {rows.map((org) => (
-        <section key={org.org_id} className="rounded-xl border bg-white p-5">
-          <h3 className="mb-3 font-semibold">{org.org_name}</h3>
-          <div className="space-y-2">
-            {org.flags.map((f) => {
-              const key = `${org.org_id}:${f.flag_key}`
-              const on = f.org_enabled === true
-              const off = f.org_enabled === false
-              return (
-                <div
-                  key={f.flag_key}
-                  className="flex items-center justify-between gap-3 border-t pt-2 first:border-0 first:pt-0"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{f.flag_key}</p>
-                    <p className="text-xs text-zinc-400">
-                      {f.org_enabled === null
-                        ? 'Not set — follows global default'
-                        : on
-                          ? 'On for the org'
-                          : 'Off for the org (ceiling)'}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 gap-1">
-                    <button
-                      type="button"
-                      disabled={busy === key}
-                      onClick={() => onToggle(org.org_id, f.flag_key, true)}
-                      className={`rounded-md px-2.5 py-1 text-xs font-medium disabled:opacity-50 ${
-                        on
-                          ? 'bg-green-600 text-white'
-                          : 'border text-zinc-500 hover:bg-zinc-50'
-                      }`}
-                    >
-                      On
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy === key}
-                      onClick={() => onToggle(org.org_id, f.flag_key, false)}
-                      className={`rounded-md px-2.5 py-1 text-xs font-medium disabled:opacity-50 ${
-                        off
-                          ? 'bg-zinc-800 text-white'
-                          : 'border text-zinc-500 hover:bg-zinc-50'
-                      }`}
-                    >
-                      Off
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      ))}
     </div>
   )
 }

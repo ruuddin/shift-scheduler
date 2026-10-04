@@ -1,102 +1,67 @@
 import { GuideHeader, Steps, Note } from '../components'
 
 export const metadata = {
-  title: 'Admin & event history — Shift Scheduler guides',
+  title: 'Admin portal — Shift Scheduler guides',
 }
 
 export default function AdminGuide() {
   return (
     <>
       <GuideHeader
-        title="Admin & event history"
-        blurb="See everything that happened on your team — every sign-in, invite, and schedule change. Managers only."
+        title="Admin portal"
+        blurb="The owner's console for managing clients. Not for customer managers — their tools live under dashboard settings."
       />
-      <h2 className="mt-8 text-lg font-semibold">Open the admin page</h2>
+      <h2 className="mt-8 text-lg font-semibold">Who can open it</h2>
       <Steps
         items={[
           <>
-            From the <strong>dashboard</strong>, tap <strong>Admin</strong>. (Or
-            open the roster and use the Guides link to get here first.)
-          </>,
-          <>
-            Only <strong>managers</strong> can open it — employees are sent back
+            Only the <strong>owner</strong> — sign-ins whose email is in the{' '}
+            <strong>OWNER_EMAILS</strong> allowlist. Everyone else is sent back
             to their dashboard.
           </>,
-        ]}
-      />
-      <h2 className="mt-8 text-lg font-semibold">Read the analytics summary</h2>
-      <Steps
-        items={[
           <>
-            At the top you&apos;ll see <strong>four numbers</strong>: total
-            events, events today, how many people did things, and how many
-            kinds of events happened.
-          </>,
-          <>
-            Below that, the <strong>activity breakdown</strong> shows a pill per
-            event kind with its count — for example “Shift created · 12”.
-          </>,
-          <>
-            <strong>Tap a pill</strong> to filter the history to just that kind
-            of event. Tap it again to clear.
+            Set <strong>OWNER_EMAILS</strong> (comma-separated) in the
+            environment. Until it&apos;s set, nobody passes the gate.
           </>,
         ]}
       />
-      <h2 className="mt-8 text-lg font-semibold">Search the full history</h2>
+      <h2 className="mt-8 text-lg font-semibold">Manage clients</h2>
       <Steps
         items={[
           <>
-            Use the <strong>filter bar</strong>: pick an event type from the
-            dropdown, type in the <strong>search box</strong> (matches email
-            addresses, shift IDs, and details), or set a <strong>from/to
-            date</strong> range.
+            The portal opens on the <strong>client list</strong>: every
+            organization, with team count, member count, and join date.
           </>,
           <>
-            Tap <strong>Filter</strong> to apply, or <strong>Clear</strong> to
-            start over.
-          </>,
-          <>
-            Every row shows <strong>when</strong> it happened, <strong>who</strong>{' '}
-            did it (and their role), <strong>what</strong> kind of event it was,
-            and a one-line <strong>summary</strong> — e.g. “Ben Barista •
-            2026-10-05 • 7:00a–3:00p”.
-          </>,
-          <>
-            The list is <strong>newest first</strong>, so the latest activity is
-            always on top.
+            Tap <strong>Manage →</strong> on a client to open its detail page:{' '}
+            <strong>teams</strong> and their member counts, <strong>roles</strong>{' '}
+            with how many members hold each, <strong>feature flags</strong>{' '}
+            (org-level ceilings you can toggle for that client), and{' '}
+            <strong>recent activity</strong> across the client&apos;s teams.
           </>,
         ]}
       />
-      <h2 className="mt-8 text-lg font-semibold">What gets recorded</h2>
+      <h2 className="mt-8 text-lg font-semibold">Owner tools</h2>
       <Steps
         items={[
           <>
-            <strong>Auth:</strong> team sign-ups, sign-ins, and sign-outs.
+            <strong>Feature flags</strong> — global defaults for every client,
+            per-team overrides, and the full toggle history with who/when.
           </>,
           <>
-            <strong>Team:</strong> every employee invite, with the
-            teammate&apos;s name and email.
+            <strong>Jobs</strong> — background job status, frequencies, run
+            history, and on-demand runs.
           </>,
           <>
-            <strong>Shifts:</strong> every create, edit, drag-and-drop move, and
-            delete — including who the shift belonged to and its times.
+            <strong>Troubleshooting</strong> — the ops runbook: detect, triage,
+            diagnose, mitigate, fix, learn.
           </>,
         ]}
       />
       <Note tone="warn">
-        <p>
-          In <strong>preview mode</strong> (before Supabase keys are connected)
-          the history is kept in the server&apos;s memory and resets when the
-          server restarts — so it&apos;s best for trying things out, not for
-          permanent records. Once Supabase is connected, every event is stored
-          in the <code>events</code> table permanently.
-        </p>
-      </Note>
-      <Note tone="tip">
-        <p>
-          Tip: check the admin page after publishing a new week&apos;s schedule
-          — it&apos;s the fastest way to confirm exactly what changed and when.
-        </p>
+        Client managers manage their own org from <strong>/settings/organization</strong>{' '}
+        (roles, members, org flags) and <strong>/settings/feature-flags</strong>{' '}
+        (team flags). They never need the admin portal — and can&apos;t open it.
       </Note>
     </>
   )
