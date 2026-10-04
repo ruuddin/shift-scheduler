@@ -103,6 +103,32 @@ browser per PR; not yet automated.
 - **Admin UI:** `/admin/flags` (defaults, rollout counts, per-team overrides,
   toggle history) and `/admin/jobs` (status, frequencies, run history, run-now).
 
+## Organizations & role hierarchy (added 2026-10-03)
+
+- **Tables:** `organizations`, `org_roles` (name, rank, is_manager — each org
+  defines its own), `org_memberships` (user_id, role_id REQUIRED, single
+  nullable manager_membership_id), `org_feature_flags`, `teams.org_id`.
+- **Permissions redefined:** every `role === 'manager'` check now goes through
+  `requireOrgManagerForActiveTeam()` — the user must hold a manager-granting
+  role in the active team's org. "Manager" is a relationship (X manages Y)
+  plus role rank, not a flat label.
+- **Hierarchy invariants enforced by DB triggers** (`validate_reporting_line`):
+  manager in same org, manager rank STRICTLY higher (same rank can't manage
+  same rank; lower can't manage higher), no cycles, direct reports keep lower
+  rank (bad demotions rejected). "One manager" is per-org (single column).
+- **Backfill:** one org per existing team; team managers → Owner, other
+  managers → Manager, employees → Employee; everyone reports to the Owner.
+  New teams bootstrap an org via `bootstrap_org()` (security definer);
+  invite-linking adds Employee membership via `add_org_member()`.
+- **Flag precedence:** org is a CEILING — org-disabled beats team overrides;
+  evaluation: org off → false, else team override → org on → global default →
+  env. Team toggles that violate the ceiling are rejected. Org toggles clear
+  the flag cache for every team.
+- **Cron-safe writes:** `job_run_start/finish`, `analytics_rollup_upsert/prune`
+  are security-definer functions — the cron route has no user session.
+- **FIX:** PR #22 shipped select-only RLS on flags tables; this migration adds
+  the missing write policies (org managers).
+
 ## Known weak spots (validate future changes against these)
 
 1. **RLS is role-global, not team-scoped.** The manager policies check

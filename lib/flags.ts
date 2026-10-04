@@ -1,9 +1,12 @@
 // Feature flags — DB-backed rollout control with 24h evaluation cache.
 //
 // Sources of truth, in order:
-//   1. team_feature_flags row for (flag, team) → explicit per-team override
-//   2. feature_flags.default_enabled            → global default (admin-set)
-//   3. FEATURE_FLAGS env var / FLAG_DEFAULTS     → fallback when the DB is
+//   1. org_feature_flags for the team's org — THE ORG IS A CEILING:
+//      org-disabled always wins, no matter what the team chose.
+//   2. team_feature_flags row for (flag, team) → explicit per-team override
+//      (a manager can only enable what the org allows)
+//   3. feature_flags.default_enabled            → global default (admin-set)
+//   4. FEATURE_FLAGS env var / FLAG_DEFAULTS     → fallback when the DB is
 //      unreachable (preview mode, or the migration hasn't run yet)
 //
 // Caching (non-functional requirement):
@@ -13,11 +16,13 @@
 //     acted in 30 days always reads fresh, so a stale 24h value can never
 //     surprise a returning manager.
 //   - Any toggle invalidates the affected cache entries immediately.
+//     Org-level toggles clear the flag's entries for every team.
 //
 // Reader/writer split: evaluations read via getReader(), toggles write
 // via getWriter().
 
 import { getReader, getWriter } from './db'
+import { getTeamOrgId, getOrgFlag } from './orgs'
 
 export const FLAG_DEFAULTS = {
   /** Drag-and-drop moving of shifts on the roster grid */
@@ -53,6 +58,8 @@ function cacheKey(flagKey: string, teamId: string): string {
 }
 
 export function invalidateFlagCache(flagKey: string, teamId?: string): void {
+  // Org-level toggles pass no teamId: clear every team entry for the flag.
+  // (Cache keys don't embed the org; clearing the whole flag is safe.)
   if (teamId) {
     evalCache.delete(cacheKey(flagKey, teamId))
     return
@@ -101,6 +108,15 @@ async function readFromDb(
 ): Promise<boolean | null> {
   try {
     const reader = await getReader()
+
+    // Org ceiling: an explicit org-level "off" beats everything below it.
+    const orgId = await getTeamOrgId(teamId)
+    let orgSetting: boolean | null = null
+    if (orgId) {
+      orgSetting = await getOrgFlag(orgId, flagKey)
+      if (orgSetting === false) return false
+    }
+
     const { data: override } = await reader
       .from('team_feature_flags')
       .select('enabled')
@@ -108,6 +124,7 @@ async function readFromDb(
       .eq('team_id', teamId)
       .maybeSingle()
     if (override) return override.enabled as boolean
+    if (orgSetting === true) return true
 
     const { data: flag } = await reader
       .from('feature_flags')
@@ -271,6 +288,16 @@ export async function setFlag(input: ToggleInput): Promise<void> {
   const writer = await getWriter()
 
   if (input.teamId) {
+    // Org ceiling: a manager can only enable what the org allows.
+    if (input.enabled) {
+      const orgId = await getTeamOrgId(input.teamId)
+      if (orgId && (await getOrgFlag(orgId, input.flagKey)) === false) {
+        throw new Error(
+          'This feature is disabled for your organization — the team cannot enable it.'
+        )
+      }
+    }
+
     const { data: existing } = await writer
       .from('team_feature_flags')
       .select('enabled')
@@ -331,6 +358,8 @@ export type ToggleRecord = {
   flag_key: string
   team_id: string | null
   team_name: string | null
+  org_id: string | null
+  org_name: string | null
   old_enabled: boolean | null
   new_enabled: boolean
   toggled_by_email: string | null
@@ -346,7 +375,7 @@ export async function getToggleHistory(
     let q = reader
       .from('flag_toggle_history')
       .select(
-        'id, flag_key, team_id, old_enabled, new_enabled, toggled_by_email, toggled_at'
+        'id, flag_key, team_id, org_id, old_enabled, new_enabled, toggled_by_email, toggled_at'
       )
       .order('toggled_at', { ascending: false })
       .limit(limit)
@@ -355,6 +384,7 @@ export async function getToggleHistory(
     if (error || !data) return []
 
     const teamIds = [...new Set(data.map((r: { team_id: string | null }) => r.team_id).filter(Boolean))]
+    const orgIds = [...new Set(data.map((r: { org_id: string | null }) => r.org_id).filter(Boolean))]
     let names = new Map<string, string>()
     if (teamIds.length > 0) {
       const { data: teams } = await reader
@@ -365,12 +395,23 @@ export async function getToggleHistory(
         (teams ?? []).map((t: { id: string; name: string }) => [t.id, t.name])
       )
     }
+    let orgNames = new Map<string, string>()
+    if (orgIds.length > 0) {
+      const { data: orgs } = await reader
+        .from('organizations')
+        .select('id, name')
+        .in('id', orgIds as string[])
+      orgNames = new Map(
+        (orgs ?? []).map((o: { id: string; name: string }) => [o.id, o.name])
+      )
+    }
 
     return data.map(
       (r: {
         id: string
         flag_key: string
         team_id: string | null
+        org_id: string | null
         old_enabled: boolean | null
         new_enabled: boolean
         toggled_by_email: string | null
@@ -378,6 +419,7 @@ export async function getToggleHistory(
       }) => ({
         ...r,
         team_name: r.team_id ? (names.get(r.team_id) ?? 'Unknown team') : null,
+        org_name: r.org_id ? (orgNames.get(r.org_id) ?? 'Unknown org') : null,
       })
     )
   } catch {

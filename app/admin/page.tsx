@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getEventsAction } from '@/app/event-actions'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 import {
   ALL_EVENT_TYPES,
   describeEvent,
@@ -53,11 +54,11 @@ export default async function AdminPage({
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) redirect('/login')
-    const { getActiveTeam, getMyTeams } = await import('@/app/team-actions')
-    const activeTeam = await getActiveTeam()
-    const teams = await getMyTeams()
-    const role = teams.find((t) => t.id === activeTeam?.id)?.role
-    if (role !== 'manager') redirect('/dashboard')
+    try {
+      await requireOrgManagerForActiveTeam()
+    } catch {
+      redirect('/dashboard')
+    }
   }
 
   const sp = await searchParams

@@ -48,6 +48,18 @@ export const EVENT_TYPES = {
     label: 'Background job ran',
     description: 'A scheduled background job finished.',
   },
+  'org.role_created': {
+    label: 'Org role created',
+    description: 'A manager defined a new role in the organization.',
+  },
+  'org.role_updated': {
+    label: 'Org role updated',
+    description: 'A manager changed an organization role.',
+  },
+  'org.member_updated': {
+    label: 'Org member updated',
+    description: "A manager changed a member's role or manager.",
+  },
 } as const
 
 export type EventType = keyof typeof EVENT_TYPES
@@ -101,6 +113,11 @@ export function describeEvent(e: AppEvent): string {
       return `${str(m.flag_key)} → ${m.new_enabled ? 'on' : 'off'}${str(m.team_name) ? ` (${str(m.team_name)})` : ' (global)'}`
     case 'job.run':
       return `${str(m.job_key)} • ${str(m.status)}`
+    case 'org.role_created':
+    case 'org.role_updated':
+      return `${str(m.name)} (rank ${str(m.rank)})`
+    case 'org.member_updated':
+      return `Member ${str(m.change)} changed`
     default:
       return e.entity_id ?? ''
   }

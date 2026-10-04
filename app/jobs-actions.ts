@@ -1,8 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { getActiveTeam, getMyTeams } from '@/app/team-actions'
 import { logEventAction } from '@/app/event-actions'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 import {
   getJobsOverview,
   getJobRuns,
@@ -17,16 +16,9 @@ function isPreview(): boolean {
 }
 
 async function requireManager() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not signed in')
-  const activeTeam = await getActiveTeam()
-  const teams = await getMyTeams()
-  const role = teams.find((t) => t.id === activeTeam?.id)?.role
-  if (!activeTeam || role !== 'manager') throw new Error('Not authorized')
-  return { user, activeTeam }
+  // Manager = holds a manager-granting role in the active team's org.
+  const m = await requireOrgManagerForActiveTeam()
+  return { user: { id: m.userId, email: m.email } }
 }
 
 export async function getJobsAction(): Promise<{

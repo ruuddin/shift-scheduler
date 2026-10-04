@@ -1,8 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getActiveTeam, getMyTeams } from '@/app/team-actions'
+import { getActiveTeam } from '@/app/team-actions'
 import { logEventAction } from '@/app/event-actions'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 
 export type TeamBranding = {
   logoUrl: string | null
@@ -12,11 +13,9 @@ export type TeamBranding = {
 const DEFAULT_BRANDING: TeamBranding = { logoUrl: null, primaryColor: '#18181b' }
 
 async function requireManager() {
-  const activeTeam = await getActiveTeam()
-  const teams = await getMyTeams()
-  const role = teams.find((t) => t.id === activeTeam?.id)?.role
-  if (!activeTeam || role !== 'manager') throw new Error('Not authorized')
-  return activeTeam
+  // Manager = holds a manager-granting role in the active team's org.
+  const m = await requireOrgManagerForActiveTeam()
+  return { id: m.teamId }
 }
 
 export async function getBranding(): Promise<TeamBranding> {

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 import InviteForm from './invite-form'
 
 // Manager-only. Activates once the employees table exists (schema applied Day 3).
@@ -12,11 +13,11 @@ export default async function InvitePage() {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
-  const { getActiveTeam, getMyTeams } = await import('@/app/team-actions')
-  const activeTeam = await getActiveTeam()
-  const teams = await getMyTeams()
-  const role = teams.find((t) => t.id === activeTeam?.id)?.role
-  if (role !== 'manager') redirect('/dashboard')
+  try {
+    await requireOrgManagerForActiveTeam()
+  } catch {
+    redirect('/dashboard')
+  }
 
   return (
     <main className="mx-auto max-w-md px-4 py-10">
