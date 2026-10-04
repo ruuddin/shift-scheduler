@@ -98,6 +98,7 @@ honest severity: "real risk" vs "correctly deferred at this scale".
 | 10 | **Tested backup/restore** — document Supabase PITR policy, perform one restore drill to a scratch project | "We have backups" is unproven until a restore is rehearsed. | M |
 | 11 | **Rehearse the rollback runbook once** (deploy previous release branch to a preview, verify) | An untested rollback plan is a hope, not a control. | S |
 | 12 | **Separate staging database** for preview deployments | Preview deploys share prod data; a preview bug can corrupt prod. Worth doing once customer count grows; overkill today. | L |
+| 13 | **Split admin portal and customer app into separate services** — monorepo (`apps/web` + `apps/admin`, shared `packages/*`), two Vercel projects, one Supabase DB; full checklist in `docs/SERVICE-SPLIT-PLAN.md` | Independent deploys, separate hardening, blast-radius isolation between owner console and customer app. Approved to start 2026-10-04. | L | — **IN PROGRESS** |
 
 ---
 
