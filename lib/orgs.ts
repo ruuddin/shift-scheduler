@@ -16,6 +16,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { getActiveTeam } from '@/app/team-actions'
 import { getReader, getWriter } from './db'
+import { cookies } from 'next/headers'
+
+export const ACTIVE_ORG_COOKIE = 'active_org_id'
 
 export type Org = {
   id: string
@@ -63,18 +66,55 @@ export async function getTeamOrgId(teamId: string): Promise<string | null> {
 }
 
 export async function getActiveOrg(): Promise<Org | null> {
+  // Org-first context: the active_org_id cookie wins when it names an org
+  // the user belongs to. Falls back to the active team's org, then the
+  // first org — so existing sessions keep working.
+  const orgId = await resolveActiveOrgId()
+  if (orgId) {
+    try {
+      const reader = await getReader()
+      const { data } = await reader
+        .from('organizations')
+        .select('id, name, created_at')
+        .eq('id', orgId)
+        .maybeSingle()
+      if (data) return data as Org
+    } catch {
+      // fall through to team-derived org
+    }
+  }
   const team = await getActiveTeam()
   if (!team) return null
-  const orgId = await getTeamOrgId(team.id)
-  if (!orgId) return null
+  const teamOrgId = await getTeamOrgId(team.id)
+  if (!teamOrgId) return null
   try {
     const reader = await getReader()
     const { data } = await reader
       .from('organizations')
       .select('id, name, created_at')
-      .eq('id', orgId)
+      .eq('id', teamOrgId)
       .maybeSingle()
     return (data as Org | null) ?? null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * The org id for the current request's org context. Cookie-first, validated
+ * against membership, falling back to the user's first org. Deliberately
+ * does NOT consult the active team (getMyTeams depends on this — going
+ * through getActiveTeam here would recurse).
+ */
+export async function resolveActiveOrgId(): Promise<string | null> {
+  if (isPreview()) return null
+  try {
+    const orgs = await getMyOrgs()
+    if (orgs.length === 0) return null
+    const cookieStore = await cookies()
+    const id = cookieStore.get(ACTIVE_ORG_COOKIE)?.value
+    if (id && orgs.some((o) => o.id === id)) return id
+    return orgs[0]?.id ?? null
   } catch {
     return null
   }
