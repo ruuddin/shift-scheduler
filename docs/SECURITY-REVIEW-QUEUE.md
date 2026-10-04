@@ -53,6 +53,29 @@ The systematic checklist version of the above. Relevant chapters:
 - **CWE-200** — Exposure of Sensitive Information to an Unauthorized Actor
   (what gets returned in action responses beyond IDs: emails, metadata)
 
+## Queued work items
+
+### PII field-level encryption — DESIGN IN PROGRESS
+Trigger: "Is the user PII encrypted in database" (2026-10-04).
+- **Inventory (plaintext today):** `employees.name`, `employees.email`,
+  `employees.phone`; `events.actor_email`;
+  `announcements.created_by_email`; `flag_toggle_history.toggled_by_email`;
+  `auth.users.email` (Supabase Auth-managed).
+- **Current protection:** Supabase disk-level encryption at rest (AES-256,
+  transparent); RLS team-scoped policies on PII tables; service-role key
+  discipline. Anyone with DB/SQL-editor/service-key access reads PII in
+  plaintext.
+- **Decision needed:** key management approach —
+  (a) Supabase Vault + pgcrypto column encryption, or
+  (b) application-level encryption with a KMS-held key.
+  Trade-off: encrypted columns can't be filtered/sorted normally —
+  invite-by-email lookup and member search need rework either way.
+  Also note: field-level encryption does NOT protect against a compromised
+  app server (the app holds the key at runtime); it protects backups,
+  DB-admin snooping, and SQL-editor exposure.
+- **Next:** pick approach, then migration plan (new columns → backfill →
+  cutover → drop plaintext).
+
 ## How a review gets done
 1. Pick the top queued spec.
 2. Work through its items against the codebase; record date + findings below.
