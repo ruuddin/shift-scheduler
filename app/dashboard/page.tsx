@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getMyTeams, getActiveTeam } from '@/app/team-actions'
 import { getBranding } from '@/app/settings/branding/actions'
+import { isFlagEnabledForTeam } from '@/lib/flags'
 import SignOutButton from './sign-out-button'
 import TeamSwitcher from '@/app/team-switcher'
 
@@ -59,6 +60,9 @@ export default async function DashboardPage() {
   const teams = await getMyTeams()
   const activeTeam = await getActiveTeam()
   const branding = await getBranding()
+  const brandingOn = activeTeam
+    ? await isFlagEnabledForTeam('team-branding', activeTeam.id, user.id)
+    : true
   // Prefer the real team name from the DB; fall back to signup metadata.
   let teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
   if (activeTeam?.name) teamName = activeTeam.name
@@ -70,7 +74,7 @@ export default async function DashboardPage() {
     <main className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-8 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          {branding.logoUrl && (
+          {brandingOn && branding.logoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={branding.logoUrl}
@@ -81,7 +85,7 @@ export default async function DashboardPage() {
           <div className="min-w-0">
             <h1
               className="truncate text-2xl font-bold"
-              style={{ color: primaryColor }}
+              style={{ color: brandingOn ? primaryColor : undefined }}
             >
               {teamName}
             </h1>
@@ -132,6 +136,12 @@ export default async function DashboardPage() {
               className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
             >
               Team branding
+            </Link>
+            <Link
+              href="/settings/feature-flags"
+              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              Feature flags
             </Link>
           </div>
         </div>

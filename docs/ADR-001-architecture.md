@@ -84,6 +84,25 @@ secret scan) + api (6: version contract, auth redirects, form rendering).
 Write-path user flows (signup → team → switch) are verified manually in the
 browser per PR; not yet automated.
 
+## Feature flags & background jobs (added 2026-10-03)
+
+- **Flags:** `feature_flags` catalog (key, description, global default) +
+  `team_feature_flags` per-team overrides + `flag_toggle_history` (who/when).
+  Evaluation: team override → global default → `FEATURE_FLAGS` env fallback.
+- **Flag cache:** process-local, 24h TTL, keyed by flag+team. Managers
+  inactive for 30+ days (no events) bypass the cache and read fresh.
+  Toggles invalidate immediately.
+- **Reader/writer split:** `lib/db.ts` — reads via `getReader()`, writes via
+  `getWriter()`. Today both hit the same Supabase project; `SUPABASE_READER_URL`
+  / `SUPABASE_SERVICE_ROLE_KEY` env vars plug in a replica / service role
+  without touching call sites.
+- **Jobs:** `lib/jobs.ts` registry (key, description, frequency) + `job_runs`
+  history. Triggered via `/api/cron/jobs` (CRON_SECRET or Vercel cron header).
+  `analytics-daily-rollup` aggregates per-team daily active users for the
+  last 90 days into `analytics_daily_active` (idempotent upserts).
+- **Admin UI:** `/admin/flags` (defaults, rollout counts, per-team overrides,
+  toggle history) and `/admin/jobs` (status, frequencies, run history, run-now).
+
 ## Known weak spots (validate future changes against these)
 
 1. **RLS is role-global, not team-scoped.** The manager policies check

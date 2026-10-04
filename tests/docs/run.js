@@ -20,6 +20,8 @@ const GUIDES = [
   { path: '/guide/teams', title: 'Working with multiple teams' },
   { path: '/guide/auth', title: 'Signing up &amp; signing in' },
   { path: '/guide/branding', title: 'Team branding' },
+  { path: '/guide/flags', title: 'Feature flags' },
+  { path: '/guide/jobs', title: 'Background jobs' },
 ]
 
 let failures = 0

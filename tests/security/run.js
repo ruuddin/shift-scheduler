@@ -100,7 +100,15 @@ async function main() {
     )
   })
 
-  for (const urlPath of ['/admin', '/roster', '/invite']) {
+  for (const urlPath of [
+    '/admin',
+    '/admin/flags',
+    '/admin/jobs',
+    '/roster',
+    '/invite',
+    '/settings/branding',
+    '/settings/feature-flags',
+  ]) {
     await check(`auth gate: ${urlPath} not open to anonymous visitors`, async () => {
       const { res, html } = await get(urlPath)
       if ([307, 308].includes(res.status)) {
