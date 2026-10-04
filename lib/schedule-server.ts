@@ -4,7 +4,7 @@
 import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
-import { getActiveTeam } from '@/app/team-actions'
+import { getActiveTeam } from '@/lib/teams'
 import { addDays, type Employee, type Shift } from './schedule'
 
 export async function getLiveWeekSchedule(
