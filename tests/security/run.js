@@ -14,6 +14,9 @@
 //   4. No secrets committed to the repo (API keys, tokens, private keys).
 //   5. Static analysis (eslint-plugin-security) is part of `npm run lint`,
 //      which CI runs as a required check on every PR.
+//   6. Every database id column is a UUID (gen_random_uuid) — no sequential
+//      integer row ids exist that could be enumerated from API responses
+//      or URLs. All client-visible entity ids are GUIDs.
 //
 // Target: TEST_BASE_URL, defaulting to the production deployment.
 // Fails (exit 1) if any check fails; prints PASS per check.
@@ -154,8 +157,34 @@ async function main() {
     )
   })
 
-  await check('no secrets committed to the repo', async () => {
-    // List tracked files (respects .gitignore) and scan for secret patterns.
+  await check('all database ids are UUIDs (no sequential row ids)', async () => {
+    // Scan every migration for id column definitions. Client-visible
+    // entity ids must be GUIDs — sequential integers would be enumerable
+    // from API responses and URLs.
+    const sqlFiles = execSync('git ls-files supabase/*.sql', {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter(Boolean)
+    assert(sqlFiles.length > 0, 'no supabase/*.sql files found')
+    const bad = []
+    for (const f of sqlFiles) {
+      const content = readFileSync(path.join(REPO_ROOT, f), 'utf8')
+      for (const line of content.split('\n')) {
+        const m = line.match(/^\s*id\s+([a-zA-Z ]+?)(?:\s+primary|\s*,|\s*$)/i)
+        if (m && !m[1].trim().toLowerCase().startsWith('uuid')) {
+          bad.push(`${f}: ${line.trim()}`)
+        }
+        if (/\b(bigserial|serial|generated\s+.*as\s+identity)\b/i.test(line)) {
+          bad.push(`${f}: sequential id: ${line.trim()}`)
+        }
+      }
+    }
+    assert(bad.length === 0, `non-UUID ids found:\n${bad.join('\n')}`)
+  })
+
+  await check('no secrets committed to the repo', async () => {    // List tracked files (respects .gitignore) and scan for secret patterns.
     const files = execSync('git ls-files', { cwd: REPO_ROOT, encoding: 'utf8' })
       .split('\n')
       .filter(Boolean)
