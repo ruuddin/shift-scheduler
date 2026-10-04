@@ -6,6 +6,7 @@ import { getBranding } from '@/app/settings/branding/actions'
 import { isFlagEnabledForTeam } from '@/lib/flags'
 import SignOutButton from './sign-out-button'
 import TeamSwitcher from '@/app/team-switcher'
+import OrgSwitcher from '@/app/org-switcher'
 import AnnouncementsFeed from './announcements'
 
 export default async function DashboardPage() {
@@ -60,6 +61,11 @@ export default async function DashboardPage() {
   const role = (user.user_metadata?.role as string) ?? 'employee'
   const teams = await getMyTeams()
   const activeTeam = await getActiveTeam()
+  // Org-first context: the org switcher picks the org, the team switcher
+  // only ever lists teams inside it.
+  const { getMyOrgs, getActiveOrg } = await import('@/lib/orgs')
+  const orgs = await getMyOrgs()
+  const activeOrg = await getActiveOrg()
   const branding = await getBranding()
   const brandingOn = activeTeam
     ? await isFlagEnabledForTeam('team-branding', activeTeam.id, user.id)
@@ -104,7 +110,8 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <OrgSwitcher orgs={orgs} activeId={activeOrg?.id ?? null} />
           <TeamSwitcher teams={teams} activeId={activeTeam?.id ?? null} />
           <SignOutButton />
         </div>
