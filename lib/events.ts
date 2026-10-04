@@ -60,6 +60,14 @@ export const EVENT_TYPES = {
     label: 'Org member updated',
     description: "A manager changed a member's role or manager.",
   },
+  'announcement.created': {
+    label: 'Announcement posted',
+    description: 'A manager posted an org-level or team-level announcement.',
+  },
+  'announcement.deleted': {
+    label: 'Announcement deleted',
+    description: 'A manager deleted an announcement.',
+  },
 } as const
 
 export type EventType = keyof typeof EVENT_TYPES

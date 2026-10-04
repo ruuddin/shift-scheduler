@@ -71,6 +71,11 @@ const GUIDES = [
     title: 'Organizations',
     blurb: 'Roles, reporting lines, and org-wide feature flags.',
   },
+  {
+    href: '/guide/announcements',
+    title: 'Announcements',
+    blurb: 'Org-level and team-level updates from managers.',
+  },
 ]
 
 export default function GuideIndexPage() {
