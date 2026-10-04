@@ -13,12 +13,13 @@ per-domain so each app signs in separately).
 
 ## Checklist
 
-- [ ] **1. Break lib→app import cycles.** A shared package cannot import from
-  an app. Known violations (2026-10-04):
-  - `lib/orgs.ts` → `@/app/team-actions` (`getActiveTeam`)
-  - `lib/schedule-server.ts` → `@/app/team-actions` (`getActiveTeam`)
-  - Fix by moving team-context resolution down into the shared package (it
-    only needs cookies + Supabase) or by threading the team in as a parameter.
+- [x] **1. Break lib→app import cycles.** A shared package cannot import from
+  an app. Fixed 2026-10-04 (PR #33, release `release/2026-10-04-02786ba`):
+  extracted `lib/teams.ts` with team-context readers (`getMyTeams`,
+  `getActiveTeam`) and context cookie constants; `lib/orgs.ts` and
+  `lib/schedule-server.ts` now import from `lib/teams`;
+  `app/team-actions.ts` re-exports the readers. No `lib/` module imports
+  from `@/app` anymore.
 - [ ] **2. Draw the split line.** Admin app owns: `app/admin/**`,
   `app/guide/admin`, `lib/owner.ts`, and the `@/app/*` modules the admin
   portal imports (`app/jobs-actions`, `app/flags-actions`,
