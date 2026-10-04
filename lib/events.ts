@@ -40,6 +40,14 @@ export const EVENT_TYPES = {
     label: 'Shift deleted',
     description: 'A manager deleted a shift from the roster.',
   },
+  'flag.toggled': {
+    label: 'Feature flag toggled',
+    description: 'A manager or admin changed a feature flag.',
+  },
+  'job.run': {
+    label: 'Background job ran',
+    description: 'A scheduled background job finished.',
+  },
 } as const
 
 export type EventType = keyof typeof EVENT_TYPES
@@ -89,6 +97,10 @@ export function describeEvent(e: AppEvent): string {
       return `${str(m.from_employee_name) || '?'} → ${str(m.to_employee_name) || '?'} • ${str(m.to_date)}`
     case 'shift.deleted':
       return `${str(m.employee_name) || 'Teammate'} • ${str(m.date)} • ${str(m.starts_at)}–${str(m.ends_at)}`
+    case 'flag.toggled':
+      return `${str(m.flag_key)} → ${m.new_enabled ? 'on' : 'off'}${str(m.team_name) ? ` (${str(m.team_name)})` : ' (global)'}`
+    case 'job.run':
+      return `${str(m.job_key)} • ${str(m.status)}`
     default:
       return e.entity_id ?? ''
   }

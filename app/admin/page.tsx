@@ -100,6 +100,18 @@ export default async function AdminPage({
           >
             Guide
           </Link>
+          <Link
+            href="/admin/flags"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Feature flags
+          </Link>
+          <Link
+            href="/admin/jobs"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Jobs
+          </Link>
         </div>
       </div>
 

@@ -56,6 +56,16 @@ const GUIDES = [
     title: 'Team branding',
     blurb: 'Add your logo and pick your team color.',
   },
+  {
+    href: '/guide/flags',
+    title: 'Feature flags',
+    blurb: 'Turn features on or off for your team, with full history.',
+  },
+  {
+    href: '/guide/jobs',
+    title: 'Background jobs',
+    blurb: 'Watch scheduled jobs, their history, and run them on demand.',
+  },
 ]
 
 export default function GuideIndexPage() {
