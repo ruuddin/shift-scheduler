@@ -85,6 +85,28 @@ export default async function DashboardPage() {
   // Role is per-team: prefer the role on the active team membership.
   const activeRole = teams.find((t) => t.id === activeTeam?.id)?.role ?? role
   const primaryColor = branding.primaryColor ?? '#18181b'
+  // Shift swaps: flag state + pending count for the dashboard.
+  const { getEmployeeIdForUser, getUpcomingShiftsForEmployee, listSwapRequests } =
+    await import('@/lib/swaps')
+  const swapsOn = activeTeam
+    ? await isFlagEnabledForTeam('shift-swaps', activeTeam.id, user.id).catch(() => false)
+    : false
+  const myEmployeeId = activeTeam
+    ? await getEmployeeIdForUser(user.id, activeTeam.id)
+    : null
+  const myShifts =
+    activeTeam && myEmployeeId && swapsOn
+      ? await getUpcomingShiftsForEmployee(myEmployeeId, activeTeam.id, 5)
+      : []
+  const pendingSwaps = activeTeam
+    ? (
+        await listSwapRequests({
+          userId: user.id,
+          teamId: activeTeam.id,
+          isManager,
+        }).catch(() => [])
+      ).length
+    : 0
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -176,15 +198,77 @@ export default async function DashboardPage() {
             >
               Team activity
             </Link>
+            {swapsOn && (
+              <Link
+                href="/swaps"
+                className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+              >
+                Shift swaps
+                {pendingSwaps > 0 && (
+                  <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs text-amber-800">
+                    {pendingSwaps} pending
+                  </span>
+                )}
+              </Link>
+            )}
           </div>
         </div>
       ) : (
         <div className="rounded-xl border p-6">
-          <h2 className="mb-2 font-semibold">My shifts</h2>
-          <p className="text-sm text-zinc-500">
-            Your published schedule will appear here once your manager builds the
-            first week (Day 6).
-          </p>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h2 className="font-semibold">My shifts</h2>
+            {swapsOn && (
+              <Link
+                href="/swaps"
+                className="rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-50"
+              >
+                Swap shifts
+                {pendingSwaps > 0 && (
+                  <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs text-amber-800">
+                    {pendingSwaps}
+                  </span>
+                )}
+              </Link>
+            )}
+          </div>
+          {myShifts.length > 0 ? (
+            <ul className="space-y-2">
+              {myShifts.map((s) => (
+                <li
+                  key={s.id}
+                  className="flex items-center justify-between gap-2 rounded-md bg-zinc-50 px-3 py-2 text-sm"
+                >
+                  <span>
+                    {new Date(s.starts_at).toLocaleString(undefined, {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                    {' – '}
+                    {new Date(s.ends_at).toLocaleTimeString(undefined, {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                  {swapsOn && (
+                    <Link
+                      href="/swaps"
+                      className="shrink-0 text-zinc-600 underline"
+                    >
+                      Request swap
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-zinc-500">
+              Your published schedule will appear here once your manager builds
+              the first week (Day 6).
+            </p>
+          )}
         </div>
       )}
       </div>

@@ -25,6 +25,7 @@ const GUIDES = [
   { path: '/guide/jobs', title: 'Background jobs' },
   { path: '/guide/organizations', title: 'Organizations' },
   { path: '/guide/announcements', title: 'Announcements' },
+  { path: '/guide/shift-swaps', title: 'Shift swaps' },
 ]
 
 let failures = 0
