@@ -107,6 +107,21 @@ export default async function DashboardPage() {
         }).catch(() => [])
       ).length
     : 0
+  // Time off: flag state + pending count for the dashboard.
+  const { listTimeOffRequests } = await import('@/lib/timeoff')
+  const timeOffOn = activeTeam
+    ? await isFlagEnabledForTeam('time-off', activeTeam.id, user.id).catch(() => false)
+    : false
+  const pendingTimeOff =
+    activeTeam && timeOffOn
+      ? (
+          await listTimeOffRequests({
+            userId: user.id,
+            teamId: activeTeam.id,
+            isManager,
+          }).catch(() => [])
+        ).length
+      : 0
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
@@ -211,25 +226,48 @@ export default async function DashboardPage() {
                 )}
               </Link>
             )}
+            {timeOffOn && (
+              <Link
+                href="/time-off"
+                className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+              >
+                Time off
+                {pendingTimeOff > 0 && (
+                  <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs text-amber-800">
+                    {pendingTimeOff} pending
+                  </span>
+                )}
+              </Link>
+            )}
           </div>
         </div>
       ) : (
         <div className="rounded-xl border p-6">
           <div className="mb-2 flex items-center justify-between gap-2">
             <h2 className="font-semibold">My shifts</h2>
-            {swapsOn && (
-              <Link
-                href="/swaps"
-                className="rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-50"
-              >
-                Swap shifts
-                {pendingSwaps > 0 && (
-                  <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs text-amber-800">
-                    {pendingSwaps}
-                  </span>
-                )}
-              </Link>
-            )}
+            <div className="flex gap-2">
+              {timeOffOn && (
+                <Link
+                  href="/time-off"
+                  className="rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-50"
+                >
+                  Time off
+                </Link>
+              )}
+              {swapsOn && (
+                <Link
+                  href="/swaps"
+                  className="rounded-md border px-3 py-1.5 text-sm hover:bg-zinc-50"
+                >
+                  Swap shifts
+                  {pendingSwaps > 0 && (
+                    <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-xs text-amber-800">
+                      {pendingSwaps}
+                    </span>
+                  )}
+                </Link>
+              )}
+            </div>
           </div>
           {myShifts.length > 0 ? (
             <ul className="space-y-2">
