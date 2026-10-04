@@ -114,6 +114,11 @@ async function main() {
     assert(res.status !== 200, `expected redirect, got ${res.status}`)
   })
 
+  await check('admin troubleshooting requires auth (redirects, not 200)', async () => {
+    const { res } = await get('/admin/troubleshooting', { redirect: 'manual' })
+    assert(res.status !== 200, `expected redirect, got ${res.status}`)
+  })
+
   if (failures > 0) {
     console.error(`${failures} docs check(s) failed`)
     process.exit(1)
