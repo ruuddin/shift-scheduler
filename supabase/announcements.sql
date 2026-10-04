@@ -50,8 +50,8 @@ create policy announcements_read on announcements
 drop policy if exists announcements_write on announcements;
 create policy announcements_write on announcements
   for all using (
-    is_org_manager(auth.uid(), announcements.org_id)
+    is_org_manager(announcements.org_id, auth.uid())
   )
   with check (
-    is_org_manager(auth.uid(), announcements.org_id)
+    is_org_manager(announcements.org_id, auth.uid())
   );
