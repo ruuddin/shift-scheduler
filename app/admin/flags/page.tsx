@@ -1,21 +1,25 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getAdminFlags, getFlagHistoryAction } from '@/app/flags-actions'
-import { getAdminOrgFlagsAction } from '@/app/org-actions'
-import AdminFlagsList, { ToggleHistory, OrgFlagsSection } from './flags-ui'
+import { requireOwner } from '@/lib/owner'
+import AdminFlagsList, { ToggleHistory } from './flags-ui'
 
 export const metadata = {
   title: 'Admin — feature flags — Shift Scheduler',
 }
 
+// Owner-only: global defaults and the full toggle history across clients.
+// Per-client org ceilings live on each client's detail page (/admin/clients/[id]);
+// managers set their own org's flags under /settings/organization.
 export default async function AdminFlagsPage() {
-  let flagsData
-  let orgFlags
   try {
-    ;[flagsData, orgFlags] = await Promise.all([
-      getAdminFlags(),
-      getAdminOrgFlagsAction().catch(() => []),
-    ])
+    await requireOwner()
+  } catch {
+    redirect('/dashboard')
+  }
+  let flagsData
+  try {
+    flagsData = await getAdminFlags()
   } catch {
     redirect('/dashboard')
   }
@@ -30,8 +34,8 @@ export default async function AdminFlagsPage() {
       </nav>
       <h1 className="text-2xl font-bold md:text-3xl">Feature flags</h1>
       <p className="mt-2 text-sm text-zinc-500">
-        Global defaults, organization ceilings, per-team overrides, and the
-        full toggle history. The default applies to every team without its own
+        Global defaults, per-team overrides across all clients, and the full
+        toggle history. The default applies to every team without its own
         override.
       </p>
       {flagsData.preview && (
@@ -43,19 +47,6 @@ export default async function AdminFlagsPage() {
       <div className="mt-6">
         <AdminFlagsList initial={flagsData.flags} />
       </div>
-
-      {orgFlags.length > 0 && (
-        <>
-          <h2 className="mb-3 mt-10 text-lg font-semibold">
-            Organization ceilings
-          </h2>
-          <p className="mb-3 text-sm text-zinc-500">
-            An org set to <strong>Off</strong> disables the feature for all its
-            teams — no team can turn it back on.
-          </p>
-          <OrgFlagsSection initial={orgFlags} />
-        </>
-      )}
 
       <h2 className="mb-3 mt-10 text-lg font-semibold">Toggle history</h2>
       <p className="mb-3 text-sm text-zinc-500">

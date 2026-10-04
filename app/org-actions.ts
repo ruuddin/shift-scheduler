@@ -126,67 +126,6 @@ export async function toggleOrgFlagAction(
   return { ok: true }
 }
 
-export type AdminOrgFlagRow = {
-  org_id: string
-  org_name: string
-  flags: { flag_key: string; description: string; org_enabled: boolean | null }[]
-}
-
-/** Admin view: org-level flag state for every org the manager belongs to. */
-export async function getAdminOrgFlagsAction(): Promise<AdminOrgFlagRow[]> {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return []
-  const { createClient } = await import('@/lib/supabase/server')
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not signed in')
-  const { getMyOrgs } = await import('@/lib/orgs')
-  const orgs = await getMyOrgs()
-  // Only orgs where the user holds manager rights.
-  const { isOrgManager } = await import('@/lib/orgs')
-  const catalog = await getFlagsCatalog()
-  const { getOrgFlag } = await import('@/lib/orgs')
-  const rows: AdminOrgFlagRow[] = []
-  for (const org of orgs) {
-    if (!(await isOrgManager(user.id, org.id))) continue
-    const flags = []
-    for (const f of catalog) {
-      flags.push({
-        flag_key: f.flag_key,
-        description: f.description,
-        org_enabled: await getOrgFlag(org.id, f.flag_key),
-      })
-    }
-    rows.push({ org_id: org.id, org_name: org.name, flags })
-  }
-  return rows
-}
-
-export async function toggleOrgFlagForAction(
-  orgId: string,
-  flagKey: string,
-  enabled: boolean
-): Promise<{ ok: true }> {
-  const { createClient } = await import('@/lib/supabase/server')
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not signed in')
-  const { isOrgManager, setOrgFlag } = await import('@/lib/orgs')
-  if (!(await isOrgManager(user.id, orgId))) throw new Error('Not authorized')
-  await setOrgFlag(orgId, flagKey, enabled, user.id, user.email ?? null)
-  invalidateFlagCache(flagKey)
-  await logEventAction({
-    eventType: 'flag.toggled',
-    entityType: 'organization',
-    entityId: orgId,
-    metadata: { flag_key: flagKey, new_enabled: enabled, scope: 'org' },
-  })
-  return { ok: true }
-}
-
 /**
  * Apply the same flag state to multiple teams at once.
  * Teams whose org disabled the flag are skipped (org ceiling) and reported.

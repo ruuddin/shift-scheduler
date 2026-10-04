@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getMyTeams } from '@/app/team-actions'
 import { logEventAction } from '@/app/event-actions'
 import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
+import { requireOwner } from '@/lib/owner'
 import {
   getFlagsCatalog,
   getFlagRollout,
@@ -131,21 +132,12 @@ export async function getAdminFlags(): Promise<{
       })),
     }
   }
-  await requireManager()
+  await requireOwner()
   const supabase = await createClient()
   const catalog = await getFlagsCatalog()
 
-  // Scope to orgs the manager belongs to — no cross-org leakage.
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: memberships } = await supabase
-    .from('org_memberships')
-    .select('org_id')
-    .eq('user_id', user!.id)
-  const orgIds = ((memberships ?? []) as { org_id: string }[]).map((m) => m.org_id)
-
-  const { data: myTeams } = orgIds.length
-    ? await supabase.from('teams').select('id, name').in('org_id', orgIds)
-    : { data: [] as { id: string; name: string }[] }
+  // Owner sees every team across all clients.
+  const { data: myTeams } = await supabase.from('teams').select('id, name')
   const teamList = (myTeams ?? []) as { id: string; name: string }[]
   const teamIds = teamList.map((t) => t.id)
   const { data: overrides } = teamIds.length
@@ -183,13 +175,13 @@ export async function toggleGlobalFlag(
   flagKey: string,
   enabled: boolean
 ): Promise<{ ok: true }> {
-  const { user } = await requireManager()
+  const { userId, email } = await requireOwner()
   await setFlag({
     flagKey,
     teamId: null,
     enabled,
-    actorId: user.id,
-    actorEmail: user.email ?? null,
+    actorId: userId,
+    actorEmail: email ?? null,
   })
   await logEventAction({
     eventType: 'flag.toggled',
@@ -204,6 +196,6 @@ export async function getFlagHistoryAction(
   flagKey?: string
 ): Promise<ToggleRecord[]> {
   if (isPreview()) return []
-  await requireManager()
+  await requireOwner()
   return getToggleHistory(flagKey, 50)
 }

@@ -70,6 +70,9 @@ export default async function DashboardPage() {
   const activeOrgId = activeTeam ? await getTeamOrgId(activeTeam.id) : null
   const isManager =
     !!activeOrgId && (await isOrgManager(user.id, activeOrgId))
+  // The /admin portal is the SaaS owner's console — never customer managers.
+  const { isOwner } = await import('@/lib/owner')
+  const showAdmin = await isOwner()
   // Prefer the real team name from the DB; fall back to signup metadata.
   let teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
   if (activeTeam?.name) teamName = activeTeam.name
@@ -128,12 +131,14 @@ export default async function DashboardPage() {
             >
               Invite employees
             </Link>
-            <Link
-              href="/admin"
-              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
-            >
-              Admin
-            </Link>
+            {showAdmin && (
+              <Link
+                href="/admin"
+                className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+              >
+                Admin
+              </Link>
+            )}
             <Link
               href="/guide"
               className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
@@ -157,6 +162,12 @@ export default async function DashboardPage() {
               className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
             >
               Organization
+            </Link>
+            <Link
+              href="/activity"
+              className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+            >
+              Team activity
             </Link>
           </div>
         </div>

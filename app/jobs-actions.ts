@@ -1,7 +1,7 @@
 'use server'
 
 import { logEventAction } from '@/app/event-actions'
-import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
+import { requireOwner } from '@/lib/owner'
 import {
   getJobsOverview,
   getJobRuns,
@@ -15,10 +15,9 @@ function isPreview(): boolean {
   return !process.env.NEXT_PUBLIC_SUPABASE_URL
 }
 
-async function requireManager() {
-  // Manager = holds a manager-granting role in the active team's org.
-  const m = await requireOrgManagerForActiveTeam()
-  return { user: { id: m.userId, email: m.email } }
+async function requireOwnerGate() {
+  // Owner-only: the /admin portal is the SaaS owner's console.
+  return requireOwner()
 }
 
 export async function getJobsAction(): Promise<{
@@ -29,7 +28,7 @@ export async function getJobsAction(): Promise<{
     const jobs = await getJobsOverview()
     return { jobs, preview: true }
   }
-  await requireManager()
+  await requireOwnerGate()
   return { jobs: await getJobsOverview(), preview: false }
 }
 
@@ -37,7 +36,7 @@ export async function getJobRunsAction(
   key: string
 ): Promise<JobRunRecord[]> {
   if (isPreview()) return []
-  await requireManager()
+  await requireOwnerGate()
   return getJobRuns(key, 30)
 }
 
@@ -45,8 +44,8 @@ export async function getJobRunsAction(
 export async function runJobAction(
   key: string
 ): Promise<{ status: string; output: string }> {
-  const { user } = await requireManager()
-  const result = await runJob(key, user.email ?? 'manual')
+  const { email: userEmail } = await requireOwnerGate()
+  const result = await runJob(key, userEmail ?? 'manual')
   await logEventAction({
     eventType: 'job.run',
     entityType: 'job',
@@ -54,7 +53,7 @@ export async function runJobAction(
     metadata: {
       job_key: key,
       status: result.status,
-      triggered_by: user.email ?? 'manual',
+      triggered_by: userEmail ?? 'manual',
     },
   })
   return result
@@ -64,7 +63,7 @@ export async function setJobEnabledAction(
   key: string,
   enabled: boolean
 ): Promise<{ ok: true }> {
-  await requireManager()
+  await requireOwnerGate()
   await setJobEnabled(key, enabled)
   return { ok: true }
 }
