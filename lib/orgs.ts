@@ -14,11 +14,9 @@
 // Reads go through getReader(), writes through getWriter().
 
 import { createClient } from '@/lib/supabase/server'
-import { getActiveTeam } from '@/app/team-actions'
+import { getActiveTeam, ACTIVE_ORG_COOKIE } from './teams'
 import { getReader, getWriter } from './db'
 import { cookies } from 'next/headers'
-
-export const ACTIVE_ORG_COOKIE = 'active_org_id'
 
 export type Org = {
   id: string
