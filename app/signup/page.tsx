@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 
 // First user of a team signs up here and becomes the manager.
 // Tip: in Supabase Auth settings, turn off "Confirm email" for the pilot

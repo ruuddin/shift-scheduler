@@ -1,6 +1,6 @@
 'use server'
 
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 import { getMyTeams } from '@/app/team-actions'
 import {
   createAnnouncement,

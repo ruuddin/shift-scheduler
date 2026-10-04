@@ -5,7 +5,7 @@ import {
   getJobRunsAction,
   runJobAction,
   setJobEnabledAction,
-} from '@/app/jobs-actions'
+} from '@/app/admin/jobs-actions'
 import type { JobInfo, JobRunRecord } from '@/lib/jobs'
 
 function fmtTime(iso: string | null): string {

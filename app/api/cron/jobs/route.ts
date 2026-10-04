@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { ALL_JOB_KEYS, runJob } from '@/lib/jobs'
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300

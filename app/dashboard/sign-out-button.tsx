@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 
 export default function SignOutButton() {
   const router = useRouter()

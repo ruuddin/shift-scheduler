@@ -4,7 +4,7 @@ import { useState } from 'react'
 import {
   toggleGlobalFlag,
   type AdminFlagRow,
-} from '@/app/flags-actions'
+} from '@/app/admin/flags-actions'
 
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {

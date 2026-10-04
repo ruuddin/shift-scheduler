@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getAdminFlags, getFlagHistoryAction } from '@/app/flags-actions'
+import { getAdminFlags, getFlagHistoryAction } from '@/app/admin/flags-actions'
 import { requireOwner } from '@/lib/owner'
 import AdminFlagsList, { ToggleHistory } from './flags-ui'
 

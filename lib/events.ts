@@ -1,7 +1,7 @@
 // Event log — taxonomy, types, and preview-mode storage.
 //
 // Every meaningful user action in the app is recorded as an event via
-// logEventAction (app/event-actions.ts). Managers browse the full history
+// logEventAction (lib/event-actions.ts). Managers browse the full history
 // on the /admin page. When Supabase keys are live, events persist in the
 // `events` table (supabase/schema.sql). In preview mode there is no
 // database, so events are kept in a process-local in-memory list —
