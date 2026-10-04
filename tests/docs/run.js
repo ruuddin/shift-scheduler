@@ -27,6 +27,7 @@ const GUIDES = [
   { path: '/guide/announcements', title: 'Announcements' },
   { path: '/guide/shift-swaps', title: 'Shift swaps' },
   { path: '/guide/time-off', title: 'Time off' },
+  { path: '/guide/feedback', title: 'Feedback' },
 ]
 
 let failures = 0

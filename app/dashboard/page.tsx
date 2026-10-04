@@ -109,6 +109,10 @@ export default async function DashboardPage() {
     : 0
   // Time off: flag state + pending count for the dashboard.
   const { listTimeOffRequests } = await import('@/lib/timeoff')
+  // Feedback: flag state for the dashboard link.
+  const feedbackOn = activeTeam
+    ? await isFlagEnabledForTeam('feedback', activeTeam.id, user.id).catch(() => false)
+    : false
   const timeOffOn = activeTeam
     ? await isFlagEnabledForTeam('time-off', activeTeam.id, user.id).catch(() => false)
     : false
@@ -237,6 +241,14 @@ export default async function DashboardPage() {
                     {pendingTimeOff} pending
                   </span>
                 )}
+              </Link>
+            )}
+            {feedbackOn && (
+              <Link
+                href="/feedback"
+                className="inline-block rounded-md border px-4 py-2 text-sm hover:bg-zinc-50"
+              >
+                Feedback
               </Link>
             )}
           </div>
