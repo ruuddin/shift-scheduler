@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isFlagEnabled } from '@/lib/flags'
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 
 function requireCrudEnabled() {

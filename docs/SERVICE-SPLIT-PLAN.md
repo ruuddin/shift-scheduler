@@ -20,13 +20,23 @@ per-domain so each app signs in separately).
   `lib/schedule-server.ts` now import from `lib/teams`;
   `app/team-actions.ts` re-exports the readers. No `lib/` module imports
   from `@/app` anymore.
-- [ ] **2. Draw the split line.** Admin app owns: `app/admin/**`,
-  `app/guide/admin`, `lib/owner.ts`, and the `@/app/*` modules the admin
-  portal imports (`app/jobs-actions`, `app/flags-actions`,
-  `app/admin/actions`, `app/event-actions`, `app/guide/components`) — each
-  either moves into the admin app or down into the shared package. Decide who
-  owns `/api/cron/jobs` (recommendation: `apps/web`, since jobs operate on
-  customer data; admin only reads `job_runs`).
+- [x] **2. Draw the split line.** Decided 2026-10-04 (implemented on
+  `chore/service-split-2`):
+
+  | Module | Decision |
+  |---|---|
+  | `app/admin/**` (pages, `actions.ts`, UIs) | admin app |
+  | `app/guide/admin`, `app/admin/troubleshooting` | admin app (uses `app/guide/components`, which is admin-only) |
+  | `app/jobs-actions.ts` → `app/admin/jobs-actions.ts` | admin app — was admin-only already |
+  | `app/flags-actions.ts` (owner part: `getAdminFlags`, `toggleGlobalFlag`, `getFlagHistoryAction`) → `app/admin/flags-actions.ts` | admin app |
+  | `app/flags-actions.ts` (manager part: `getManagerFlags`, `toggleTeamFlag`) | web app — stays at `app/flags-actions.ts` |
+  | `app/event-actions.ts` → `lib/event-actions.ts` | shared package — 17 importers across customer, admin, and API routes; imports only from `@/lib` |
+  | `lib/owner.ts`, `lib/flags.ts`, `lib/events.ts`, `lib/jobs.ts`, `lib/db.ts`, `lib/teams.ts` | shared package |
+  | `/api/cron/jobs` | **web app owns it** — jobs operate on customer data; the admin portal only reads `job_runs` via `jobs-actions`. `CRON_SECRET` lives on the web app. |
+
+  Splitting `flags-actions` by privilege level (not just by app) means each
+  service now contains only the actions its users are authorized to call —
+  the old file mixed owner-only and manager-only actions in one module.
 - [ ] **3. Repo layout.** npm workspaces: `apps/*`, `packages/*`. Move code,
   replace `@/` imports with package imports, set `transpilePackages` in both
   Next configs. Keep `supabase/`, `tests/`, `docs/` at the root (migrations and

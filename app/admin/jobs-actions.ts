@@ -1,6 +1,6 @@
 'use server'
 
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 import { requireOwner } from '@/lib/owner'
 import {
   getJobsOverview,

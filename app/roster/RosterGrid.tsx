@@ -9,7 +9,7 @@ import {
   colorFor,
 } from '@/lib/schedule'
 import { createShiftAction, updateShiftAction, deleteShiftAction, moveShiftAction } from './actions'
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 
 type Props = {
   employees: Employee[]

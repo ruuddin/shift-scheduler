@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { getJobsAction } from '@/app/jobs-actions'
+import { getJobsAction } from '@/app/admin/jobs-actions'
 import JobsList from './jobs-ui'
 
 export const metadata = {

@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { getActiveTeam } from '@/app/team-actions'
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 
 export type TeamBranding = {

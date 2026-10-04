@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getEventsAction } from '@/app/event-actions'
+import { getEventsAction } from '@/lib/event-actions'
 import { requireOrgManagerForActiveTeam } from '@/lib/orgs'
 import {
   ALL_EVENT_TYPES,

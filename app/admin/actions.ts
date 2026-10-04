@@ -1,6 +1,6 @@
 'use server'
 
-import { logEventAction } from '@/app/event-actions'
+import { logEventAction } from '@/lib/event-actions'
 import { getWriter } from '@/lib/db'
 import { getFlagsCatalog, invalidateFlagCache, type FlagInfo } from '@/lib/flags'
 import { requireOwner } from '@/lib/owner'
