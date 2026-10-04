@@ -113,6 +113,43 @@ export default async function AdminPage({
           >
             Jobs
           </Link>
+          <Link
+            href="/admin/troubleshooting"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Troubleshooting
+          </Link>
+        </div>
+      </div>
+
+      {/* Admin guides — kept on the admin portal */}
+      <div className="mb-6 rounded-xl border bg-white p-4">
+        <h2 className="mb-3 font-semibold">Admin guides</h2>
+        <div className="flex flex-wrap gap-2 text-sm">
+          <Link
+            href="/admin/troubleshooting"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Troubleshooting runbook
+          </Link>
+          <Link
+            href="/guide/flags"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Feature flags guide
+          </Link>
+          <Link
+            href="/guide/jobs"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Background jobs guide
+          </Link>
+          <Link
+            href="/guide/admin"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Event history guide
+          </Link>
         </div>
       </div>
 
