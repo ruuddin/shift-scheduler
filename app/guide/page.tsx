@@ -81,6 +81,11 @@ const GUIDES = [
     title: 'Announcements',
     blurb: 'Org-level and team-level updates from managers.',
   },
+  {
+    href: '/guide/shift-swaps',
+    title: 'Shift swaps',
+    blurb: 'Request, approve, and track shift swaps.',
+  },
 ]
 
 export default function GuideIndexPage() {

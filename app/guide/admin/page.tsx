@@ -58,6 +58,27 @@ export default function AdminGuide() {
           </>,
         ]}
       />
+      <h2 className="mt-8 text-lg font-semibold">Feature administration</h2>
+      <p className="mt-2 text-sm text-zinc-500">
+        Every shipped feature, its flag, and what to watch as the owner. New
+        features are appended here on release.
+      </p>
+      <Steps
+        items={[
+          <>
+            <strong>Shift swaps</strong> (flag <code>shift-swaps</code>,
+            default on): employees request swaps, managers approve — nothing
+            moves without approval, and double-booking is blocked at approval
+            time. Owner controls: the global default under{' '}
+            <strong>Feature flags</strong>, and the per-client org ceiling on
+            each client&apos;s detail page. Watch <code>swap.requested</code> /{' '}
+            <code>swap.approved</code> / <code>swap.declined</code> /{' '}
+            <code>swap.cancelled</code> in client activity. Requests stuck on
+            “pending” mean the client&apos;s manager hasn&apos;t reviewed them —
+            not a bug.
+          </>,
+        ]}
+      />
       <Note tone="warn">
         Client managers manage their own org from <strong>/settings/organization</strong>{' '}
         (roles, members, org flags) and <strong>/settings/feature-flags</strong>{' '}
