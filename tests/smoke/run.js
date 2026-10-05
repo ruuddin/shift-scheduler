@@ -84,14 +84,53 @@ async function main() {
 
   const h = ptHour()
   if (h >= 23 || h < 1) {
-    await check('maintenance banner shows inside the nightly window', async () => {
+    // The banner is client-rendered: the window depends on the visitor's clock,
+    // so it must not be baked into statically-prerendered HTML at build time
+    // (that was the bug — the server check only reflected the build's clock).
+    // curl can't observe its client-side visibility, so the smoke test asserts
+    // the wiring in the HTML and the real window logic from lib/maintenance.ts
+    // against pinned dates instead of the current wall clock.
+    await check('maintenance banner wired into layout', async () => {
       // Banner lives in the root layout, so it's on /login too (roster needs auth).
       const { res, html } = await get('/login')
       assert(res.status === 200, `status ${res.status}`)
-      assert(html.includes('role="status"'), 'banner not rendered')
+      // Accept both the legacy server-rendered marker and the current
+      // client-rendered one, so the nightly stays green across the deploy.
+      assert(
+        html.includes('data-maintenance-banner') ||
+          html.includes('role="status"'),
+        'banner not wired into layout'
+      )
       assert(
         html.includes('Nightly maintenance in progress'),
         'banner text missing'
+      )
+    })
+    await check('maintenance window logic (pinned dates)', async () => {
+      delete process.env.MAINTENANCE_WINDOW // pin the default 23:00–01:00 PT window
+      const { inMaintenanceWindow } = await import(
+        '../../lib/maintenance.ts'
+      )
+      const d = (s) => new Date(s)
+      assert(
+        inMaintenanceWindow(d('2026-10-04T23:30:00-07:00')) === true,
+        '23:30 PT should be in the window'
+      )
+      assert(
+        inMaintenanceWindow(d('2026-10-05T00:30:00-07:00')) === true,
+        '00:30 PT should be in the window'
+      )
+      assert(
+        inMaintenanceWindow(d('2026-10-04T23:00:00-07:00')) === true,
+        '23:00 PT boundary should be in the window'
+      )
+      assert(
+        inMaintenanceWindow(d('2026-10-05T01:00:00-07:00')) === false,
+        '01:00 PT boundary should be out of the window'
+      )
+      assert(
+        inMaintenanceWindow(d('2026-10-04T12:00:00-07:00')) === false,
+        '12:00 PT should be out of the window'
       )
     })
   } else {
