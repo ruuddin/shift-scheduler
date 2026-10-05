@@ -87,6 +87,20 @@ export default function AdminGuide() {
             / <code>timeoff.declined</code> / <code>timeoff.cancelled</code> and{' '}
             <code>availability.updated</code> in client activity.
           </>,
+          <>
+            <strong>Feedback</strong> (flag <code>feedback</code>, default
+            on): users submit bug reports, feature requests, and general
+            notes from <strong>/feedback</strong>; org managers see their
+            org&apos;s feedback, and you review everything across clients
+            at <strong>/admin/feedback</strong> with new → reviewed →
+            resolved triage. Owner controls: the global default under{' '}
+            <strong>Feature flags</strong>, and the per-client org ceiling on
+            each client&apos;s detail page. Watch{' '}
+            <code>feedback.submitted</code> /{' '}
+            <code>feedback.status_changed</code> in client activity. A rising
+            count of <strong>bug</strong>-category items from one client is
+            your early warning that something is broken for them.
+          </>,
         ]}
       />
       <Note tone="warn">

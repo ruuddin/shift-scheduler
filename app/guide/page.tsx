@@ -91,6 +91,11 @@ const GUIDES = [
     title: 'Time off & availability',
     blurb: 'Request time off and set weekly availability.',
   },
+  {
+    href: '/guide/feedback',
+    title: 'Feedback',
+    blurb: 'Send feedback and track what happens to it.',
+  },
 ]
 
 export default function GuideIndexPage() {

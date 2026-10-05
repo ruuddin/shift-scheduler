@@ -62,6 +62,12 @@ export default async function AdminPage() {
             Jobs
           </Link>
           <Link
+            href="/admin/feedback"
+            className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
+          >
+            Feedback
+          </Link>
+          <Link
             href="/admin/troubleshooting"
             className="rounded-md border px-3 py-1.5 hover:bg-zinc-50"
           >
