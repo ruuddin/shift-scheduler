@@ -10,6 +10,7 @@
 // async function bodies (never at module init), so the cycle is safe.
 
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 import { createClient } from './supabase/server'
 import { resolveActiveOrgId } from './orgs'
 
@@ -31,7 +32,12 @@ export type TeamRow = {
 // Every team the current user belongs to, across ALL orgs (via their
 // employee rows). Internal — callers must use getMyTeams(), which scopes
 // to the active org.
-export async function getAllMyTeamRows(): Promise<TeamRow[]> {
+//
+// Memoized per request: several readers (getMyTeams, getActiveTeam, …)
+// overlap on this query, and without dedup the employees table is hit
+// multiple times per page render.
+export const getAllMyTeamRows = cache(
+  async (): Promise<TeamRow[]> => {
   const supabase = await createClient()
   const {
     data: { user },
@@ -62,22 +68,23 @@ export async function getAllMyTeamRows(): Promise<TeamRow[]> {
   // De-dupe by team id (a user should only have one row per team, but be safe).
   const seen = new Set<string>()
   return teams.filter((t) => (seen.has(t.id) ? false : (seen.add(t.id), true)))
-}
+})
 
 // Teams the user can see in the current org context. A user in several
 // orgs only ever sees the active org's teams — never teams from other orgs.
 // Falls back to all teams only when the user has no org context at all.
-export async function getMyTeams() {
+// Memoized per request: getActiveTeam() calls this again internally.
+export const getMyTeams = cache(async () => {
   const orgId = await resolveActiveOrgId()
   const rows = await getAllMyTeamRows()
   const visible = orgId ? rows.filter((r) => r.org_id === orgId) : rows
   return visible.map(({ id, name, role }) => ({ id, name, role }))
-}
+})
 
 // The team the user is currently working in, within the active org.
 // Reads the active_team_id cookie, falls back to their first team in the
 // org. Returns null when the user has no team in the org.
-export async function getActiveTeam() {
+export const getActiveTeam = cache(async () => {
   const teams = await getMyTeams()
   if (teams.length === 0) return null
 
@@ -85,4 +92,4 @@ export async function getActiveTeam() {
   const activeId = cookieStore.get(ACTIVE_TEAM_COOKIE)?.value
   const match = activeId ? teams.find((t) => t.id === activeId) : undefined
   return match ?? teams[0] ?? null
-}
+})

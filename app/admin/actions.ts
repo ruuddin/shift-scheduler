@@ -40,12 +40,16 @@ export async function getClientsAction(): Promise<{
   }
   await requireOwner()
   const db = await getWriter()
-  const { data: orgs } = await db
-    .from('organizations')
-    .select('id, name, created_at')
-    .order('created_at', { ascending: false })
-  const { data: teams } = await db.from('teams').select('id, org_id')
-  const { data: members } = await db.from('org_memberships').select('org_id')
+  // The three counts are independent — fire them together.
+  const [{ data: orgs }, { data: teams }, { data: members }] =
+    await Promise.all([
+      db
+        .from('organizations')
+        .select('id, name, created_at')
+        .order('created_at', { ascending: false }),
+      db.from('teams').select('id, org_id'),
+      db.from('org_memberships').select('org_id'),
+    ])
 
   const teamCount = new Map<string, number>()
   for (const t of (teams ?? []) as { org_id: string }[]) {
