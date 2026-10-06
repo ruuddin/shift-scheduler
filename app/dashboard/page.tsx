@@ -59,69 +59,71 @@ export default async function DashboardPage() {
   if (!user) redirect('/login')
 
   const role = (user.user_metadata?.role as string) ?? 'employee'
-  const teams = await getMyTeams()
-  const activeTeam = await getActiveTeam()
+  const [{ getMyOrgs, getActiveOrg, getTeamOrgId, isOrgManager }, { isOwner }, swapsLib, timeoffLib] =
+    await Promise.all([
+      import('@/lib/orgs'),
+      import('@/lib/owner'),
+      import('@/lib/swaps'),
+      import('@/lib/timeoff'),
+    ])
+  const { getEmployeeIdForUser, getUpcomingShiftsForEmployee, listSwapRequests } = swapsLib
+  const { listTimeOffRequests } = timeoffLib
+  // Independent reads fire together. The team/org readers are memoized per
+  // request (React cache()), so their overlapping lookups only hit the DB
+  // once no matter how many callers ask.
+  const [teams, orgs, branding, showAdmin] = await Promise.all([
+    getMyTeams(),
+    getMyOrgs(),
+    getBranding(),
+    isOwner(),
+  ])
   // Org-first context: the org switcher picks the org, the team switcher
-  // only ever lists teams inside it.
-  const { getMyOrgs, getActiveOrg } = await import('@/lib/orgs')
-  const orgs = await getMyOrgs()
-  const activeOrg = await getActiveOrg()
-  const branding = await getBranding()
-  const brandingOn = activeTeam
-    ? await isFlagEnabledForTeam('team-branding', activeTeam.id, user.id)
-    : true
+  // only ever lists teams inside it. These re-read memoized values plus
+  // cookies — no extra DB round trips.
+  const [activeTeam, activeOrg] = await Promise.all([
+    getActiveTeam(),
+    getActiveOrg(),
+  ])
+  const [brandingOn, activeOrgId, swapsOn, timeOffOn] = await Promise.all([
+    activeTeam
+      ? isFlagEnabledForTeam('team-branding', activeTeam.id, user.id)
+      : Promise.resolve(true),
+    activeTeam ? getTeamOrgId(activeTeam.id) : Promise.resolve(null),
+    // Shift swaps: flag state for the dashboard.
+    activeTeam
+      ? isFlagEnabledForTeam('shift-swaps', activeTeam.id, user.id).catch(() => false)
+      : Promise.resolve(false),
+    // Time off: flag state for the dashboard.
+    activeTeam
+      ? isFlagEnabledForTeam('time-off', activeTeam.id, user.id).catch(() => false)
+      : Promise.resolve(false),
+  ])
   // Manager status now comes from the org role (is_manager), not the
   // legacy per-team employee row.
-  const { getTeamOrgId, isOrgManager } = await import('@/lib/orgs')
-  const activeOrgId = activeTeam ? await getTeamOrgId(activeTeam.id) : null
-  const isManager =
-    !!activeOrgId && (await isOrgManager(user.id, activeOrgId))
   // The /admin portal is the SaaS owner's console — never customer managers.
-  const { isOwner } = await import('@/lib/owner')
-  const showAdmin = await isOwner()
+  const isManager = !!activeOrgId && (await isOrgManager(user.id, activeOrgId))
   // Prefer the real team name from the DB; fall back to signup metadata.
   let teamName = (user.user_metadata?.team_name as string) ?? 'Your team'
   if (activeTeam?.name) teamName = activeTeam.name
   // Role is per-team: prefer the role on the active team membership.
   const activeRole = teams.find((t) => t.id === activeTeam?.id)?.role ?? role
   const primaryColor = branding.primaryColor ?? '#18181b'
-  // Shift swaps: flag state + pending count for the dashboard.
-  const { getEmployeeIdForUser, getUpcomingShiftsForEmployee, listSwapRequests } =
-    await import('@/lib/swaps')
-  const swapsOn = activeTeam
-    ? await isFlagEnabledForTeam('shift-swaps', activeTeam.id, user.id).catch(() => false)
-    : false
   const myEmployeeId = activeTeam
     ? await getEmployeeIdForUser(user.id, activeTeam.id)
     : null
-  const myShifts =
+  const [myShifts, swapRequests, timeOffRequests] = await Promise.all([
     activeTeam && myEmployeeId && swapsOn
-      ? await getUpcomingShiftsForEmployee(myEmployeeId, activeTeam.id, 5)
-      : []
-  const pendingSwaps = activeTeam
-    ? (
-        await listSwapRequests({
-          userId: user.id,
-          teamId: activeTeam.id,
-          isManager,
-        }).catch(() => [])
-      ).length
-    : 0
-  // Time off: flag state + pending count for the dashboard.
-  const { listTimeOffRequests } = await import('@/lib/timeoff')
-  const timeOffOn = activeTeam
-    ? await isFlagEnabledForTeam('time-off', activeTeam.id, user.id).catch(() => false)
-    : false
-  const pendingTimeOff =
+      ? getUpcomingShiftsForEmployee(myEmployeeId, activeTeam.id, 5)
+      : Promise.resolve([]),
+    activeTeam
+      ? listSwapRequests({ userId: user.id, teamId: activeTeam.id, isManager }).catch(() => [])
+      : Promise.resolve([]),
     activeTeam && timeOffOn
-      ? (
-          await listTimeOffRequests({
-            userId: user.id,
-            teamId: activeTeam.id,
-            isManager,
-          }).catch(() => [])
-        ).length
-      : 0
+      ? listTimeOffRequests({ userId: user.id, teamId: activeTeam.id, isManager }).catch(() => [])
+      : Promise.resolve([]),
+  ])
+  const pendingSwaps = swapRequests.length
+  const pendingTimeOff = timeOffRequests.length
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">

@@ -50,8 +50,10 @@ events (append-only audit log: team_id, actor_id, actor_email, actor_role,
     `role = 'manager'`*.
   - Employees: read own employee row, own shifts; CRUD own swap/time-off
     requests; can claim an invite row by matching email.
-- Session refresh via `middleware.ts` (`supabase.auth.getUser()` on every
-  request; skips entirely when Supabase keys are absent = preview mode).
+- Session refresh via `proxy.ts` (Next 16 renamed file convention;
+  `supabase.auth.getUser()` on every non-public request; skips entirely when
+  Supabase keys are absent = preview mode, and skips public funnel pages
+  `/login`, `/signup`, `/guide/*`).
 
 ## Key flows
 
