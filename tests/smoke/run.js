@@ -109,7 +109,7 @@ async function main() {
     await check('maintenance window logic (pinned dates)', async () => {
       delete process.env.MAINTENANCE_WINDOW // pin the default 23:00–01:00 PT window
       const { inMaintenanceWindow } = await import(
-        '../../lib/maintenance.ts'
+        '../../packages/shared/maintenance.ts'
       )
       const d = (s) => new Date(s)
       assert(

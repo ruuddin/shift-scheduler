@@ -1,0 +1,1 @@
+{"dependencies":{"@shift-scheduler/shared":"*","@supabase/ssr":"^0.12.7","@supabase/supabase-js":"^2.117.2","next":"16.3.6","react":"^19.2.8","react-dom":"^19.2.8"},"description":"Shift Scheduler SaaS-owner console.","name":"@shift-scheduler/admin","private":true,"scripts":{"build":"next build","dev":"next dev","lint":"eslint","start":"next start"},"version":"0.1.0"}
