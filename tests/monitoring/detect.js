@@ -7,6 +7,9 @@
 // - Anomaly: prints ALERT: lines and exits 1.
 // - Clean: prints an OK: summary and exits 0.
 
+// NOTE: plain Node script, not TypeScript — require() is the correct module
+// API here; the @typescript-eslint/no-require-imports rule doesn't apply.
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs')
 const path = require('path')
 

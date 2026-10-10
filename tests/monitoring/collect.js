@@ -7,6 +7,9 @@
 //         to tests/monitoring/history.jsonl (created if missing).
 // Exits 1 when the log is missing — never fabricates data.
 
+// NOTE: plain Node script, not TypeScript — require() is the correct module
+// API here; the @typescript-eslint/no-require-imports rule doesn't apply.
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs')
 const path = require('path')
 
