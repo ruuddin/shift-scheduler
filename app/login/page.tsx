@@ -34,13 +34,15 @@ export default function LoginPage() {
       <form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl bg-white p-8 shadow">
         <h1 className="mb-1 text-2xl font-bold">Shift Scheduler</h1>
         <p className="mb-6 text-sm text-zinc-500">Sign in to your team</p>
-        <label className="mb-1 block text-sm font-medium">Email</label>
+        <label htmlFor="login-email" className="mb-1 block text-sm font-medium">Email</label>
         <input
+          id="login-email"
           type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
           className="mb-4 w-full rounded-md border px-3 py-2"
         />
-        <label className="mb-1 block text-sm font-medium">Password</label>
+        <label htmlFor="login-password" className="mb-1 block text-sm font-medium">Password</label>
         <input
+          id="login-password"
           type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
           className="mb-4 w-full rounded-md border px-3 py-2"
         />

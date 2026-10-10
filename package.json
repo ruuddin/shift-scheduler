@@ -12,7 +12,8 @@
     "test:docs": "node tests/docs/run.js",
     "test:security": "node tests/security/run.js",
     "test:nightly": "npm run test:e2e && npm run test:load && npm run test:docs && npm run test:security && npm run test:api",
-    "test:api": "node tests/api/run.js"
+    "test:api": "node tests/api/run.js",
+    "test:a11y": "node tests/a11y/run.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -27,9 +28,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axe-core": "^4.14.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "eslint-plugin-security": "^4.2.0",
+    "jsdom": "^30.1.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
