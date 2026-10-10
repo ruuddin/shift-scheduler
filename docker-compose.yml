@@ -1,0 +1,39 @@
+# Local dev environment. Single service: the Next.js dev server.
+#
+# Supabase is deliberately NOT a service here: auth/data live in the cloud
+# Supabase project and are reached over HTTPS via env vars (see DOCKER.md).
+#
+# Usage: cp .env.example .env.local (fill in values), then `docker compose up`
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    container_name: shift-scheduler-dev
+    ports:
+      - "3000:3000"
+    # .env.local supplies Supabase/Twilio/Resend/Stripe keys. NEVER commit it.
+    env_file:
+      - path: ./.env.local
+        required: false
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      # Live code: edits on the host hot-reload inside the container.
+      - .:/app
+      # Keep container-owned dirs out of the bind mount (host OS mismatch /
+      # stale build cache), so they live in named volumes instead.
+      - shift_scheduler_node_modules:/app/node_modules
+      - shift_scheduler_next_cache:/app/.next
+    restart: unless-stopped
+    healthcheck:
+      # next dev serves the root route once compiled
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  shift_scheduler_node_modules:
+  shift_scheduler_next_cache:
