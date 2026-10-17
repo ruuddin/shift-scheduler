@@ -18,3 +18,21 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  # Shift-left security scanning (Trivy): filesystem scan of the repo for
+  # known vulnerabilities in dependencies and for committed secrets.
+  # Fails the pipeline on HIGH/CRITICAL findings — fix by bumping the
+  # dependency (or, exceptionally, adding the CVE to .trivyignore with a
+  # written justification).
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy vulnerability + secret scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln,secret'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
