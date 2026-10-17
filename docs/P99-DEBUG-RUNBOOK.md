@@ -39,7 +39,11 @@ Logs written only to stdout vanish when the process dies.
       are still visible (dashboard retention is limited — check early).
 - **GAP:** no log drain is configured, so logs are gone once Vercel's
   retention passes. Persistent, searchable logs (a drain to an external
-  sink) are the missing instrumentation this step assumes.
+  sink) are the missing instrumentation this step assumes. The ingest
+  endpoint now exists (`app/api/log-drain`, table `app_logs`); it stays
+  a GAP until the one-time setup in `docs/LOG-DRAIN.md` is done (SQL
+  migration + `LOG_DRAIN_SECRET` + drain created in the Vercel
+  dashboard).
 
 ### 3. Crashes self-heal (auto-restart)
 A memory leak shouldn't need a human to restart the app.
