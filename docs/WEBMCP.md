@@ -78,10 +78,14 @@ The tool:
 - **Build:** lint clean on all new/changed files; `next build` passes;
   the registration code (`get_roster_week`, `modelContext`) is confirmed
   present in the built client bundle.
-- **Live browser, managed browser:** the managed browser cannot reach a
-  localhost dev server (its requests to `127.0.0.1` are rejected before
-  loading, while public sites load fine), so the in-browser check was run
-  against the PR preview deployment instead — see the PR for its result.
+- **Live browser:** two routes tried, both blocked outside the app's
+  control, so no in-browser result exists yet. (1) The managed browser
+  cannot reach localhost dev servers (requests to `127.0.0.1` are
+  rejected before loading, while public sites load fine). (2) The PR
+  preview deployment sits behind Vercel SSO, so the app page never
+  loaded there either — no sign-in was attempted. To run it: open the
+  preview in your own browser, sign in to Vercel, and the check in
+  "How to test it yourself" above applies unchanged.
 - **Not exercised here (honest limits):** the 200 path with a real
   signed-in manager session (no test credentials are available, and
   passwords are never requested); and a flag-on agent call (needs Chrome
