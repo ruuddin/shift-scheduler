@@ -35,6 +35,8 @@ export const FLAG_DEFAULTS = {
   'maintenance-banner': true,
   /** Team logo and brand color on the dashboard */
   'team-branding': true,
+  /** WebMCP roster tool (get_roster_week) exposed to browser agents */
+  'webmcp-roster-tool': true,
 } as const
 
 export type FlagName = keyof typeof FLAG_DEFAULTS
