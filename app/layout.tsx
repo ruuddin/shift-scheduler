@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MaintenanceBanner from "./MaintenanceBanner";
+import WebMCPTools from "./WebMCPTools";
 import { isFlagEnabled } from "@/lib/flags";
 
 const geistSans = Geist({
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <MaintenanceBanner enabled={isFlagEnabled("maintenance-banner")} />
+        <WebMCPTools enabled={isFlagEnabled("webmcp-roster-tool")} />
         {children}
       </body>
     </html>
