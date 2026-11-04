@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# nightly monitoring run data (per-run, machine-local)
+tests/monitoring/history.jsonl
+tests/monitoring/last-run.log
