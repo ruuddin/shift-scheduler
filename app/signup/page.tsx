@@ -86,24 +86,28 @@ export default function SignupPage() {
       <form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl bg-white p-8 shadow">
         <h1 className="mb-1 text-2xl font-bold">Create your team</h1>
         <p className="mb-6 text-sm text-zinc-500">You&apos;ll be the manager</p>
-        <label className="mb-1 block text-sm font-medium">Your name</label>
+        <label htmlFor="signup-name" className="mb-1 block text-sm font-medium">Your name</label>
         <input
+          id="signup-name"
           required value={name} onChange={(e) => setName(e.target.value)}
           className="mb-4 w-full rounded-md border px-3 py-2"
         />
-        <label className="mb-1 block text-sm font-medium">Team name</label>
+        <label htmlFor="signup-team" className="mb-1 block text-sm font-medium">Team name</label>
         <input
+          id="signup-team"
           required value={teamName} onChange={(e) => setTeamName(e.target.value)}
           placeholder="e.g. Blue Bottle — Hayes Valley"
           className="mb-4 w-full rounded-md border px-3 py-2"
         />
-        <label className="mb-1 block text-sm font-medium">Email</label>
+        <label htmlFor="signup-email" className="mb-1 block text-sm font-medium">Email</label>
         <input
+          id="signup-email"
           type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
           className="mb-4 w-full rounded-md border px-3 py-2"
         />
-        <label className="mb-1 block text-sm font-medium">Password</label>
+        <label htmlFor="signup-password" className="mb-1 block text-sm font-medium">Password</label>
         <input
+          id="signup-password"
           type="password" required minLength={6} value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mb-4 w-full rounded-md border px-3 py-2"
