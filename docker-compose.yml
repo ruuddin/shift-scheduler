@@ -1,0 +1,27 @@
+# Local development stack for shift-scheduler.
+#
+# Quick start:
+#   1. cp .env.example .env.local   # then fill in your Supabase values
+#   2. docker compose up --build
+#   3. Open http://localhost:3000
+#
+# This file is dev-only. Production deploys to Vercel from git and ignores it.
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    # .env.local is gitignored; compose keeps working without it so the
+    # container can boot before you've filled in secrets (pages that need
+    # Supabase will show a config error until you do).
+    env_file:
+      - path: .env.local
+        required: false
+    volumes:
+      # Live working tree -> hot reload inside the container.
+      - .:/app
+      # Keep container-owned build artifacts out of the host tree.
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev -- -H 0.0.0.0 -p 3000
