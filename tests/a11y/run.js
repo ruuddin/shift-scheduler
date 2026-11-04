@@ -15,7 +15,7 @@
 const BASE =
   process.env.TEST_BASE_URL ?? 'https://shift-scheduler-blond-two.vercel.app'
 
-const PATHS = ['/', '/login', '/signup', '/guide', '/guide/getting-started']
+const PATHS = ['/', '/login', '/signup', '/guide', '/guide/getting-started', '/welcome']
 
 // axe-core ships as a browser bundle; injected into the jsdom window per
 // page (see auditPage).

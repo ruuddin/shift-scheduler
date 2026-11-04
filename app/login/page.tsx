@@ -56,6 +56,9 @@ export default function LoginPage() {
         <p className="mt-4 text-center text-sm text-zinc-500">
           New team? <Link href="/signup" className="underline">Create an account</Link>
         </p>
+        <p className="mt-2 text-center text-sm text-zinc-500">
+          <Link href="/welcome" className="underline">See how Shift Scheduler works</Link>
+        </p>
       </form>
     </main>
   )
