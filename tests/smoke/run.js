@@ -71,6 +71,15 @@ async function main() {
     const { res, html } = await get('/login')
     assert(res.status === 200, `status ${res.status}`)
     assert(html.includes('type="password"'), 'missing password field')
+    assert(html.includes('href="/welcome"'), 'login missing welcome link')
+  })
+
+  await check('welcome page loads for anonymous users', async () => {
+    const { res, html } = await get('/welcome')
+    assert(res.status === 200, `status ${res.status}`)
+    assert(res.url.endsWith('/welcome'), `unexpected landing: ${res.url}`)
+    assert(html.includes('href="/signup"'), 'missing signup CTA')
+    assert(html.includes('Drag-and-drop scheduling'), 'missing feature list')
   })
 
   await check('dashboard is reachable', async () => {

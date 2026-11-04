@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Supabase client setup + session check entirely for these — they are the
 // highest-traffic pages and every millisecond here is first-impression
 // latency.
-const PUBLIC_PATHS = ['/login', '/signup', '/guide']
+const PUBLIC_PATHS = ['/login', '/signup', '/guide', '/welcome']
 
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(
